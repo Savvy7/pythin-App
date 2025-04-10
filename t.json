@@ -1,0 +1,139 @@
+{
+    "id": 1942,
+    "name": "The Witcher 3: Wild Hunt",
+    "cover": "//images.igdb.com/igdb/image/upload/t_thumb/co1wyy.jpg",
+    "genres": [
+        "Role-playing (RPG)",
+        "Adventure"
+    ],
+    "rating": 93.95561148660752,
+    "series": [
+        "The Witcher"
+    ],
+    "themes": [
+        "Action",
+        "Fantasy",
+        "Open world"
+    ],
+    "summary": "RPG and sequel to The Witcher 2 (2011), The Witcher 3 follows witcher Geralt of Rivia as he seeks out his former lover and his young subject while intermingling with the political workings of the wartorn Northern Kingdoms. Geralt has to fight monsters and deal with people of all sorts in order to solve complex problems and settle contentious disputes, each ranging from the personal to the world-changing.",
+    "developer": "CD Projekt RED",
+    "platforms": [
+        "Xbox Series X|S",
+        "PlayStation 4",
+        "PC (Microsoft Windows)",
+        "PlayStation 5",
+        "Xbox One",
+        "Nintendo Switch"
+    ],
+    "publisher": "WB Games",
+    "franchises": [
+        "The Witcher"
+    ],
+    "game_modes": [
+        "Single player"
+    ],
+    "collections": [
+        {
+            "id": 62,
+            "name": "The Witcher"
+        }
+    ],
+    "game_engines": [
+        "REDengine"
+    ],
+    "release_date": "May 19, 2015",
+    "total_rating": 92.83780574330376,
+    "release_dates": [
+        {
+            "id": 23744,
+            "human": "May 19, 2015"
+        },
+        {
+            "id": 23743,
+            "human": "May 19, 2015"
+        },
+        {
+            "id": 226672,
+            "human": "Jan 28, 2021"
+        },
+        {
+            "id": 431187,
+            "human": "Dec 14, 2022"
+        },
+        {
+            "id": 23745,
+            "human": "May 19, 2015"
+        },
+        {
+            "id": 430627,
+            "human": "Dec 14, 2022"
+        }
+    ],
+    "weighted_rating": 88.65735438996242,
+    "involved_companies": [
+        {
+            "id": 17436,
+            "company": {
+                "id": 50,
+                "name": "WB Games"
+            },
+            "developer": false,
+            "publisher": true
+        },
+        {
+            "id": 17769,
+            "company": {
+                "id": 3119,
+                "name": "cdp.pl"
+            },
+            "developer": false,
+            "publisher": true
+        },
+        {
+            "id": 17771,
+            "company": {
+                "id": 1217,
+                "name": "Spike Chunsoft"
+            },
+            "developer": false,
+            "publisher": true
+        },
+        {
+            "id": 17768,
+            "company": {
+                "id": 248,
+                "name": "Bandai Namco Entertainment"
+            },
+            "developer": false,
+            "publisher": true
+        },
+        {
+            "id": 42142,
+            "company": {
+                "id": 908,
+                "name": "CD Projekt RED"
+            },
+            "developer": true,
+            "publisher": false
+        },
+        {
+            "id": 64293,
+            "company": {
+                "id": 5696,
+                "name": "D3T Limited"
+            },
+            "developer": false,
+            "publisher": false
+        },
+        {
+            "id": 196544,
+            "company": {
+                "id": 946,
+                "name": "Saber Interactive"
+            },
+            "developer": false,
+            "publisher": false
+        }
+    ],
+    "total_rating_count": 4463
+}

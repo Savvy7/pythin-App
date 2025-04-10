@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    <ul>
+    {% for game in games %}
+        <li>{{ game.name }} ({{ game.id }}) <a href="/add_game/{{ game.id }}">Add to Library</a></li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
