@@ -1,11 +1,73 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}GameTracker - Home{% endblock %}
 
 {% block content %}
-    <h1>Game Tracker</h1>
-    <form action="/search" method="get">
-        <input type="text" name="query" placeholder="Search for games">
-        <input type="submit" value="Search">
-    </form>
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center py-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">Track Your Gaming Journey</h1>
+            <p class="lead mb-4">Keep track of your games, manage your backlog, and discover new titles to play. Join our community of gamers today!</p>
+            {% if not logged_in %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 me-md-2">Get Started</a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            <img src="https://placehold.co/600x400" class="img-fluid rounded shadow" alt="Gaming illustration">
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row py-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="display-5 fw-bold">Features</h2>
+            <p class="lead">Everything you need to manage your gaming collection</p>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 p-4 text-center">
+                <div class="card-body">
+                    <i class="fas fa-search fa-3x mb-3 text-primary"></i>
+                    <h3 class="card-title h4">Search Games</h3>
+                    <p class="card-text">Find games from our extensive database powered by IGDB.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 p-4 text-center">
+                <div class="card-body">
+                    <i class="fas fa-list-check fa-3x mb-3 text-primary"></i>
+                    <h3 class="card-title h4">Track Progress</h3>
+                    <p class="card-text">Keep track of your gaming backlog and completion status.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 p-4 text-center">
+                <div class="card-body">
+                    <i class="fas fa-star fa-3x mb-3 text-primary"></i>
+                    <h3 class="card-title h4">Rate & Review</h3>
+                    <p class="card-text">Share your thoughts and ratings on the games you've played.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row py-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="display-5 fw-bold">Find Your Next Game</h2>
+            <p class="lead">Search through our extensive database of games</p>
+        </div>
+        <div class="col-md-8 mx-auto">
+            <form action="{{ url_for('search') }}" method="get" class="d-flex gap-2">
+                <input type="search" name="query" class="form-control form-control-lg" placeholder="Search for games...">
+                <button type="submit" class="btn btn-primary btn-lg">Search</button>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
