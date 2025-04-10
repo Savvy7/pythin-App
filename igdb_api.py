@@ -1,5 +1,14 @@
 import requests
 import time
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# IGDB API credentials from environment variables
+IGDB_CLIENT_ID = os.getenv('IGDB_CLIENT_ID')
+IGDB_CLIENT_SECRET = os.getenv('IGDB_CLIENT_SECRET')
 
 # Token cache
 _token_cache = {
@@ -7,7 +16,7 @@ _token_cache = {
     'expires_at': 0
 }
 
-def get_igdb_access_token(client_id, client_secret):
+def get_igdb_access_token(client_id=IGDB_CLIENT_ID, client_secret=IGDB_CLIENT_SECRET):
     """Get IGDB access token, using cached token if available and not expired"""
     global _token_cache
     
@@ -35,8 +44,13 @@ def get_igdb_access_token(client_id, client_secret):
         print(f"Error getting access token: {response.status_code} - {response.text}")
         return None
 
-def get_igdb_games(query, client_id, access_token):
+def get_igdb_games(query, client_id=IGDB_CLIENT_ID, access_token=None):
     """Search for games using IGDB API"""
+    if not access_token:
+        access_token = get_igdb_access_token(client_id)
+        if not access_token:
+            return None
+            
     headers = {
         'Client-ID': client_id,
         'Authorization': f'Bearer {access_token}'
@@ -58,8 +72,13 @@ def get_igdb_games(query, client_id, access_token):
         print(f"Error searching games: {response.status_code} - {response.text}")
         return None
 
-def get_igdb_games_by_id(game_id, client_id, access_token):
+def get_igdb_games_by_id(game_id, client_id=IGDB_CLIENT_ID, access_token=None):
     """Get detailed game info by ID using IGDB API"""
+    if not access_token:
+        access_token = get_igdb_access_token(client_id)
+        if not access_token:
+            return None
+            
     headers = {
         'Client-ID': client_id,
         'Authorization': f'Bearer {access_token}'
@@ -84,11 +103,8 @@ def get_igdb_games_by_id(game_id, client_id, access_token):
         return None
 
 if __name__ == "__main__":
-    # Use the correct client_secret provided in the user message for app.py
-    client_id = "5z3ofm5nmm44s4y4fwtidim7pp9vig"
-    client_secret = "xvlwctmsktbu6vz6gwwd2n6w0um4ow" # Make sure this is the active one
-    access_token = get_igdb_access_token(client_id, client_secret)
+    access_token = get_igdb_access_token()
     if access_token:
         query = "Cyberpunk"
-        games = get_igdb_games(query, client_id, access_token)
+        games = get_igdb_games(query)
         print(games)

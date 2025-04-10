@@ -6,26 +6,27 @@ import json
 import functools # For login_required decorator
 import os # To generate secret key
 import igdb_api
-from data_loader import add_game_to_db
+from data_loader import add_game_to_db, get_db_connection
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-here')
 
-# Secret key for session management - Replace with a strong, random key in production
-# You can generate one using: python -c 'import os; print(os.urandom(24))'
-app.secret_key = os.urandom(24)
+# Database connection settings from environment variables
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_NAME = os.getenv('DB_NAME', 'gametrackerV2')
+DB_USER = os.getenv('DB_USER', 'root')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
 
-# MySQL connection settings (Consider moving to a config file or environment variables)
-host_name = 'localhost'
-db_name = 'gametrackerV2'
-user_name = 'root'
-user_password = 'password'
-
-# IGDB API credentials
-client_id = "5z3ofm5nmm44s4y4fwtidim7pp9vig"
-client_secret = "xvlwctmsktbu6vz6gwwd2n6w0um4ow"
+# IGDB API credentials from environment variables
+IGDB_CLIENT_ID = os.getenv('IGDB_CLIENT_ID')
+IGDB_CLIENT_SECRET = os.getenv('IGDB_CLIENT_SECRET')
 
 # Get initial access token
-access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+access_token = igdb_api.get_igdb_access_token(IGDB_CLIENT_ID, IGDB_CLIENT_SECRET)
 if not access_token:
     print("Failed to get initial access token. Check your IGDB credentials.")
 
@@ -34,10 +35,10 @@ def get_db_connection():
     """Establishes a connection to the database."""
     try:
         conn = mysql.connector.connect(
-            host=host_name,
-            database=db_name,
-            user=user_name,
-            password=user_password
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
         )
         return conn
     except Error as e:
@@ -71,12 +72,12 @@ def search():
     # Use cached access token
     global access_token
     if not access_token:
-        access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+        access_token = igdb_api.get_igdb_access_token(IGDB_CLIENT_ID, IGDB_CLIENT_SECRET)
         if not access_token:
             flash("Failed to authenticate with IGDB API", "danger")
             return render_template('search_results.html', games=[], logged_in=('user_id' in session))
             
-    game_data = igdb_api.get_igdb_games(query, client_id, access_token)
+    game_data = igdb_api.get_igdb_games(query, IGDB_CLIENT_ID, access_token)
     if not game_data:
         flash(f"No games found for '{query}'", "info")
         return render_template('search_results.html', games=[], logged_in=('user_id' in session))
@@ -189,7 +190,7 @@ def add_game(igdb_id):
     # Use cached access token
     global access_token
     if not access_token:
-        access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+        access_token = igdb_api.get_igdb_access_token(IGDB_CLIENT_ID, IGDB_CLIENT_SECRET)
         if not access_token:
             flash("Failed to authenticate with IGDB API", "danger")
             return redirect(request.referrer or url_for('index'))
@@ -197,12 +198,12 @@ def add_game(igdb_id):
     # Use the new add_game_to_db function from data_loader.py
     game = add_game_to_db(
         igdb_id, 
-        client_id, 
+        IGDB_CLIENT_ID, 
         access_token, 
-        host_name, 
-        db_name, 
-        user_name, 
-        user_password
+        DB_HOST, 
+        DB_NAME, 
+        DB_USER, 
+        DB_PASSWORD
     )
     
     if not game:
@@ -286,4 +287,4 @@ def my_library():
 
 if __name__ == '__main__':
     # debug=True is helpful for development but should be False in production
-    app.run(debug=True)
+    app.run(debug=os.getenv('FLASK_DEBUG', 'True').lower() == 'true')

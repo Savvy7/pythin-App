@@ -3,12 +3,21 @@ from mysql.connector import Error
 import json
 import requests
 import time
+import os
+from dotenv import load_dotenv
 
-# Database credentials
-DB_HOST = 'localhost'
-DB_NAME = 'gametrackerV2'
-DB_USER = 'root'
-DB_PASSWORD = 'password'
+# Load environment variables
+load_dotenv()
+
+# Database credentials from environment variables
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_NAME = os.getenv('DB_NAME', 'gametrackerV2')
+DB_USER = os.getenv('DB_USER', 'root')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
+
+# IGDB API credentials from environment variables
+IGDB_CLIENT_ID = os.getenv('IGDB_CLIENT_ID')
+IGDB_CLIENT_SECRET = os.getenv('IGDB_CLIENT_SECRET')
 
 # Bayesian parameters for weighted rating
 MIN_VOTES = 1000  # m
@@ -17,6 +26,20 @@ C = 70  # Estimated average rating
 def weighted_rating(R, v, m=MIN_VOTES, C=C):
     """Calculate weighted rating using Bayesian average"""
     return (v / (v + m)) * R + (m / (v + m)) * C
+
+def get_db_connection():
+    """Create and return a database connection"""
+    try:
+        connection = mysql.connector.connect(
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        return connection
+    except Error as e:
+        print(f"Error connecting to database: {e}")
+        return None
 
 def add_game_to_db(igdb_id, client_id, access_token, host_name=DB_HOST, db_name=DB_NAME, user_name=DB_USER, user_password=DB_PASSWORD):
     """Fetches a game by ID from IGDB and adds it to the local_games table.
@@ -98,12 +121,11 @@ def add_game_to_db(igdb_id, client_id, access_token, host_name=DB_HOST, db_name=
     # Now store the game in the database
     connection = None
     try:
-        connection = mysql.connector.connect(
-            host=host_name,
-            database=db_name,
-            user=user_name,
-            password=user_password
-        )
+        connection = get_db_connection()
+        if not connection:
+            print("Failed to connect to database")
+            return None
+            
         cursor = connection.cursor()
         
         # Check if the table exists and has the correct structure
@@ -206,25 +228,21 @@ def load_game_data_to_db(host_name, db_name, user_name, user_password, game_data
     print("Warning: Using deprecated function. Consider using add_game_to_db instead.")
     connection = None
     try:
-        connection = mysql.connector.connect(
-            host=host_name,
-            database=db_name,
-            user=user_name,
-            password=user_password
-        )
-        cursor = connection.cursor()
+        connection = get_db_connection()
+        if not connection:
+            return
 
         for game in game_data:
             # Use the new function for each game
-            client_id = "5z3ofm5nmm44s4y4fwtidim7pp9vig"
-            client_secret = "xvlwctmsktbu6vz6gwwd2n6w0um4ow"
-            
-            # Import here to avoid circular imports
-            import igdb_api
-            access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
-            
-            # Add each game
-            add_game_to_db(game['id'], client_id, access_token, host_name, db_name, user_name, user_password)
+            add_game_to_db(
+                game['id'], 
+                IGDB_CLIENT_ID, 
+                igdb_api.get_igdb_access_token(IGDB_CLIENT_ID, IGDB_CLIENT_SECRET),
+                host_name, 
+                db_name, 
+                user_name, 
+                user_password
+            )
 
         print("Game data loaded into the database successfully")
     except Error as e:
@@ -236,18 +254,11 @@ def load_game_data_to_db(host_name, db_name, user_name, user_password, game_data
             print("MySQL connection is closed")
 
 if __name__ == "__main__":
-    host_name = 'localhost'
-    db_name = 'gametrackerV2'
-    user_name = 'root'
-    user_password = 'password'
-
     # Load game data from IGDB API
     import igdb_api
-    client_id = "5z3ofm5nmm44s4y4fwtidim7pp9vig"
-    client_secret = "xvlwctmsktbu6vz6gwwd2n6w0um4ow"
-    access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+    access_token = igdb_api.get_igdb_access_token(IGDB_CLIENT_ID, IGDB_CLIENT_SECRET)
     query = "Cyberpunk"
-    game_data = igdb_api.get_igdb_games(query, client_id, access_token)
+    game_data = igdb_api.get_igdb_games(query, IGDB_CLIENT_ID, access_token)
 
     if game_data:
-        load_game_data_to_db(host_name, db_name, user_name, user_password, game_data)
+        load_game_data_to_db(DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, game_data)
