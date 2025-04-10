@@ -22,7 +22,12 @@ user_password = 'password'
 
 # IGDB API credentials
 client_id = "5z3ofm5nmm44s4y4fwtidim7pp9vig"
-client_secret = "efuidgsvskkdqj0rk57s7nyodtgo72"
+client_secret = "xvlwctmsktbu6vz6gwwd2n6w0um4ow"
+
+# Get initial access token
+access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+if not access_token:
+    print("Failed to get initial access token. Check your IGDB credentials.")
 
 # --- Database Connection Helper ---
 def get_db_connection():
@@ -60,10 +65,22 @@ def index():
 @app.route('/search', methods=['GET'])
 def search():
     query = request.args.get('query')
-    # Call IGDB API to search for games
-    access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+    if not query:
+        return render_template('search_results.html', games=[], logged_in=('user_id' in session))
+        
+    # Use cached access token
+    global access_token
+    if not access_token:
+        access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+        if not access_token:
+            flash("Failed to authenticate with IGDB API", "danger")
+            return render_template('search_results.html', games=[], logged_in=('user_id' in session))
+            
     game_data = igdb_api.get_igdb_games(query, client_id, access_token)
-    # Pass login status to template
+    if not game_data:
+        flash(f"No games found for '{query}'", "info")
+        return render_template('search_results.html', games=[], logged_in=('user_id' in session))
+        
     return render_template('search_results.html', games=game_data, logged_in=('user_id' in session))
 
 # --- Authentication Routes ---
@@ -169,11 +186,15 @@ def logout():
 @app.route('/add_game/<int:igdb_id>')
 @login_required  # Protect this route
 def add_game(igdb_id):
-    # Get IGDB access token
-    access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+    # Use cached access token
+    global access_token
+    if not access_token:
+        access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
+        if not access_token:
+            flash("Failed to authenticate with IGDB API", "danger")
+            return redirect(request.referrer or url_for('index'))
     
     # Use the new add_game_to_db function from data_loader.py
-    # This will add/update the game in the local_games table
     game = add_game_to_db(
         igdb_id, 
         client_id, 

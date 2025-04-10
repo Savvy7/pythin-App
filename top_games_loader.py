@@ -7,7 +7,7 @@ import igdb_api # Import our existing module
 
 # IGDB API credentials (Can be removed if fetched from igdb_api module context, but keep for now)
 CLIENT_ID = "5z3ofm5nmm44s4y4fwtidim7pp9vig"
-CLIENT_SECRET = "efuidgsvskkdqj0rk57s7nyodtgo72" # Ensure this is the correct active secret
+CLIENT_SECRET = "xvlwctmsktbu6vz6gwwd2n6w0um4ow" # Ensure this is the correct active secret
 
 # Database credentials
 DB_HOST = 'localhost'

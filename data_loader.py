@@ -62,6 +62,7 @@ def add_game_to_db(igdb_id, client_id, access_token, host_name=DB_HOST, db_name=
     
     # Process the game data
     game = games[0]
+    print(f"Processing game: {game.get('name')} (ID: {game.get('id')})")
     
     # Process platforms and genres into lists
     game['platforms'] = [p['name'] for p in game.get('platforms', [])]
@@ -105,12 +106,42 @@ def add_game_to_db(igdb_id, client_id, access_token, host_name=DB_HOST, db_name=
         )
         cursor = connection.cursor()
         
+        # Check if the table exists and has the correct structure
+        cursor.execute("SHOW TABLES LIKE 'local_games'")
+        if not cursor.fetchone():
+            # Create the table if it doesn't exist
+            create_table_query = """
+            CREATE TABLE local_games (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title TEXT NOT NULL,
+                igdb_id INT UNIQUE,
+                cover TEXT,
+                release_date TEXT,
+                platforms JSON,
+                genres JSON,
+                rating INT,
+                summary TEXT,
+                metadata JSON,
+                developer TEXT,
+                publisher TEXT,
+                game_modes JSON,
+                series JSON,
+                franchises JSON,
+                themes JSON,
+                game_engines JSON,
+                tags JSON,
+                weighted_rating FLOAT
+            )
+            """
+            cursor.execute(create_table_query)
+            print("Created local_games table")
+        
         # Insert or update the game
         insert_query = """
         INSERT INTO local_games (
             igdb_id, title, cover, release_date, platforms, genres, rating, summary, metadata,
-            developer, publisher, tags
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            developer, publisher, game_modes, series, franchises, themes, game_engines, tags, weighted_rating
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             title = VALUES(title),
             cover = VALUES(cover),
@@ -121,10 +152,17 @@ def add_game_to_db(igdb_id, client_id, access_token, host_name=DB_HOST, db_name=
             summary = VALUES(summary),
             metadata = VALUES(metadata),
             developer = VALUES(developer),
-            publisher = VALUES(publisher)
+            publisher = VALUES(publisher),
+            game_modes = VALUES(game_modes),
+            series = VALUES(series),
+            franchises = VALUES(franchises),
+            themes = VALUES(themes),
+            game_engines = VALUES(game_engines),
+            weighted_rating = VALUES(weighted_rating)
         """
         
-        cursor.execute(insert_query, (
+        # Prepare the values
+        values = (
             game['id'],
             game['name'],
             game.get('cover'),
@@ -136,15 +174,26 @@ def add_game_to_db(igdb_id, client_id, access_token, host_name=DB_HOST, db_name=
             json.dumps(game),  # Store full fetched data as metadata
             game.get('developer'),
             game.get('publisher'),
-            json.dumps([])  # Placeholder for tags
-        ))
+            json.dumps(game.get('game_modes', [])),
+            json.dumps(game.get('series', [])),
+            json.dumps(game.get('franchises', [])),
+            json.dumps(game.get('themes', [])),
+            json.dumps(game.get('game_engines', [])),
+            json.dumps([]),  # Placeholder for tags
+            game.get('weighted_rating')
+        )
         
+        print(f"Attempting to insert game with values: {values}")
+        cursor.execute(insert_query, values)
         connection.commit()
         print(f"Successfully added/updated game '{game['name']}' (ID: {game['id']}) to local_games table.")
         return game
         
     except Error as e:
         print(f"Error adding game to database: {e}")
+        print(f"Error details: {str(e)}")
+        if connection:
+            connection.rollback()
         return None
     finally:
         if connection is not None and connection.is_connected():
@@ -168,7 +217,7 @@ def load_game_data_to_db(host_name, db_name, user_name, user_password, game_data
         for game in game_data:
             # Use the new function for each game
             client_id = "5z3ofm5nmm44s4y4fwtidim7pp9vig"
-            client_secret = "efuidgsvskkdqj0rk57s7nyodtgo72"
+            client_secret = "xvlwctmsktbu6vz6gwwd2n6w0um4ow"
             
             # Import here to avoid circular imports
             import igdb_api
@@ -195,7 +244,7 @@ if __name__ == "__main__":
     # Load game data from IGDB API
     import igdb_api
     client_id = "5z3ofm5nmm44s4y4fwtidim7pp9vig"
-    client_secret = "efuidgsvskkdqj0rk57s7nyodtgo72"
+    client_secret = "xvlwctmsktbu6vz6gwwd2n6w0um4ow"
     access_token = igdb_api.get_igdb_access_token(client_id, client_secret)
     query = "Cyberpunk"
     game_data = igdb_api.get_igdb_games(query, client_id, access_token)
