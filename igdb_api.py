@@ -1,7 +1,8 @@
 import requests
 import time
 import os
-from dotenv import load_dotenv
+import json
+from dotenv import load_dotenv, set_key, get_key
 
 # Load environment variables
 load_dotenv()
@@ -10,20 +11,16 @@ load_dotenv()
 IGDB_CLIENT_ID = os.getenv('IGDB_CLIENT_ID')
 IGDB_CLIENT_SECRET = os.getenv('IGDB_CLIENT_SECRET')
 
-# Token cache
-_token_cache = {
-    'token': None,
-    'expires_at': 0
-}
-
 def get_igdb_access_token(client_id=IGDB_CLIENT_ID, client_secret=IGDB_CLIENT_SECRET):
     """Get IGDB access token, using cached token if available and not expired"""
-    global _token_cache
+    # Get cached token from .env
+    cached_token = os.getenv('IGDB_ACCESS_TOKEN')
+    expires_at = float(os.getenv('IGDB_TOKEN_EXPIRES_AT', '0'))
     
     # Check if we have a valid cached token
     current_time = time.time()
-    if _token_cache['token'] and current_time < _token_cache['expires_at']:
-        return _token_cache['token']
+    if cached_token and current_time < expires_at:
+        return cached_token
     
     # Get new token if cache is empty or expired
     url = "https://id.twitch.tv/oauth2/token"
@@ -32,16 +29,22 @@ def get_igdb_access_token(client_id=IGDB_CLIENT_ID, client_secret=IGDB_CLIENT_SE
         "client_secret": client_secret,
         "grant_type": "client_credentials"
     }
-    response = requests.post(url, params=params)
     
-    if response.status_code == 200:
+    try:
+        response = requests.post(url, params=params, verify=False)
+        response.raise_for_status()
         data = response.json()
+        
         # Cache the token with expiration time (usually 60 days, but we'll refresh after 30 days to be safe)
-        _token_cache['token'] = data["access_token"]
-        _token_cache['expires_at'] = current_time + (30 * 24 * 60 * 60)  # 30 days in seconds
+        new_expires_at = current_time + (30 * 24 * 60 * 60)  # 30 days in seconds
+        
+        # Save to .env file
+        set_key('.env', 'IGDB_ACCESS_TOKEN', data["access_token"])
+        set_key('.env', 'IGDB_TOKEN_EXPIRES_AT', str(new_expires_at))
+        
         return data["access_token"]
-    else:
-        print(f"Error getting access token: {response.status_code} - {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting access token: {e}")
         return None
 
 def get_igdb_games(query, client_id=IGDB_CLIENT_ID, access_token=None):

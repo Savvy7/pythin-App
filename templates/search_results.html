@@ -1,14 +1,224 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Search Results</title>
-</head>
-<body>
-    <h1>Search Results</h1>
-    <ul>
-    {% for game in games %}
-        <li>{{ game.name }} ({{ game.id }}) <a href="/add_game/{{ game.id }}">Add to Library</a></li>
-    {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem;
+    }
+
+    .game-card {
+        position: relative;
+        aspect-ratio: 2/3;
+        overflow: hidden;
+        border-radius: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .game-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    .game-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .game-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.5) 50%, transparent);
+        padding: 1rem;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .game-card:hover .game-overlay {
+        opacity: 1;
+    }
+
+    .game-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .game-info {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+    .add-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background-color: rgba(0,0,0,0.7);
+        border: none;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.2s;
+    }
+
+    .game-card:hover .add-btn {
+        opacity: 1;
+    }
+
+    .add-btn:hover {
+        background-color: var(--accent-color);
+        transform: scale(1.1);
+    }
+
+    .filter-bar {
+        background-color: var(--secondary-bg);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .view-controls {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .view-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .view-btn:hover, .view-btn.active {
+        color: var(--text-primary);
+        background-color: var(--hover-bg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <form action="{{ url_for('search') }}" method="get" class="d-flex gap-2">
+                <input type="search" name="query" class="form-control" 
+                       value="{{ request.args.get('query', '') }}" placeholder="Search games...">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="col-md-2">
+            <select class="form-select">
+                <option>Sort by Name</option>
+                <option>Sort by Release Date</option>
+                <option>Sort by Rating</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <div class="view-controls float-end">
+                <button class="view-btn active" title="Grid View">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button class="view-btn" title="List View">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="search-results-grid">
+    {% if games %}
+        {% for game in games %}
+        <div class="game-card">
+            <img src="{{ game.cover.url|replace('t_thumb', 't_cover_big') if game.cover else 'https://placehold.co/400x600?text=No+Image' }}" 
+                 class="game-cover" alt="{{ game.name }}">
+            
+            {% if logged_in %}
+            <a href="{{ url_for('add_game', igdb_id=game.id) }}" class="add-btn" title="Add to Library">
+                <i class="fas fa-plus"></i>
+            </a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="add-btn" title="Login to Add">
+                <i class="fas fa-plus"></i>
+            </a>
+            {% endif %}
+            
+            <div class="game-overlay">
+                <h3 class="game-title">{{ game.name }}</h3>
+                <div class="game-info">
+                    {% if game.release_dates %}
+                    <div>Released: {{ game.release_dates[0].human }}</div>
+                    {% endif %}
+                    {% if game.rating %}
+                    <div>Rating: {{ "%.1f"|format(game.rating|float / 10) }}/10</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            {% if request.args.get('query') %}
+                <div class="mb-4">
+                    <i class="fas fa-search fa-4x text-secondary"></i>
+                </div>
+                <h3 class="text-secondary">No Results Found</h3>
+                <p class="text-muted">We couldn't find any games matching your search.</p>
+                <p class="text-muted">Try different keywords!</p>
+            {% else %}
+                <div class="mb-4">
+                    <i class="fas fa-gamepad fa-4x text-secondary"></i>
+                </div>
+                <h3 class="text-secondary">Search for Games</h3>
+                <p class="text-muted">Use the search bar above to find games!</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // View toggle
+    const viewButtons = document.querySelectorAll('.view-btn');
+    const resultsGrid = document.querySelector('.search-results-grid');
+    
+    viewButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            viewButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            if (this.title === 'List View') {
+                resultsGrid.style.display = 'block';
+                // Add list view styling
+            } else {
+                resultsGrid.style.display = 'grid';
+                // Add grid view styling
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %}
