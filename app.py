@@ -15,6 +15,16 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-here')
 
+# Custom Jinja2 filters
+@app.template_filter('fromjson')
+def fromjson(value):
+    """Parse a JSON string into Python objects for use in templates."""
+    try:
+        return json.loads(value)
+    except (ValueError, TypeError):
+        # Return empty list if JSON parsing fails
+        return []
+
 # Database connection settings from environment variables
 DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_NAME = os.getenv('DB_NAME', 'gametrackerV2')
@@ -284,6 +294,141 @@ def my_library():
     # We need to create my_library.html template next
     return render_template('my_library.html', library=tracked_games, logged_in=True)
 
+# Add new route for updating game status
+@app.route('/update_game_status/<int:igdb_id>', methods=['POST'])
+@login_required
+def update_game_status(igdb_id):
+    """Updates the status, rating, and review of a tracked game."""
+    user_id = session['user_id']
+    status = request.form.get('status')
+    rating = request.form.get('rating')
+    review = request.form.get('review')
+    
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            # Update the user's tracked game entry
+            query = """
+            UPDATE user_tracked_games 
+            SET status = %s, personal_rating = %s, review = %s
+            WHERE user_id = %s AND game_igdb_id = %s
+            """
+            cursor.execute(query, (status, rating, review, user_id, igdb_id))
+            conn.commit()
+            
+            if cursor.rowcount > 0:
+                flash("Game status updated successfully!", "success")
+            else:
+                flash("No changes were made or game not found.", "warning")
+                
+        except Error as e:
+            conn.rollback()
+            flash(f"Error updating game: {e}", "danger")
+            print(f"Error updating game status for user {user_id}, game {igdb_id}: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+    
+    return redirect(url_for('my_library'))
+
+# Add new route for removing a game from library
+@app.route('/remove_game/<int:igdb_id>', methods=['POST'])
+@login_required
+def remove_game(igdb_id):
+    """Removes a game from the user's tracked games."""
+    user_id = session['user_id']
+    
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            # Delete the user's tracked game entry
+            query = """
+            DELETE FROM user_tracked_games
+            WHERE user_id = %s AND game_igdb_id = %s
+            """
+            cursor.execute(query, (user_id, igdb_id))
+            conn.commit()
+            
+            if cursor.rowcount > 0:
+                flash("Game removed from your library.", "success")
+            else:
+                flash("Game not found in your library.", "warning")
+                
+        except Error as e:
+            conn.rollback()
+            flash(f"Error removing game: {e}", "danger")
+            print(f"Error removing game for user {user_id}, game {igdb_id}: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+    
+    return redirect(url_for('my_library'))
+
+# Add new route for viewing game details
+@app.route('/game/<int:igdb_id>')
+@login_required
+def game_details(igdb_id):
+    """Display detailed information about a specific game."""
+    conn = get_db_connection()
+    if not conn:
+        flash("Database connection error", "danger")
+        return redirect(url_for('my_library'))
+    
+    cursor = conn.cursor(dictionary=True)
+    user_id = session['user_id']
+    game_data = None
+    user_data = None
+    
+    try:
+        # Get game data from local_games table
+        game_query = """
+        SELECT * FROM local_games
+        WHERE igdb_id = %s
+        """
+        cursor.execute(game_query, (igdb_id,))
+        game_data = cursor.fetchone()
+        
+        if not game_data:
+            flash("Game not found in database", "warning")
+            return redirect(url_for('my_library'))
+            
+        # Parse JSON fields
+        json_fields = ['platforms', 'genres', 'game_modes', 'series', 'franchises', 'themes', 'game_engines', 'tags']
+        for field in json_fields:
+            if field in game_data and game_data[field]:
+                try:
+                    # If it's already a string, try to parse it to JSON
+                    if isinstance(game_data[field], str):
+                        game_data[field] = json.loads(game_data[field])
+                    # If parsing fails or it's None, ensure it's an empty list
+                except (json.JSONDecodeError, TypeError):
+                    game_data[field] = []
+            else:
+                game_data[field] = []
+        
+        # Get user-specific data for this game
+        user_query = """
+        SELECT status, personal_rating, review, date_added 
+        FROM user_tracked_games
+        WHERE user_id = %s AND game_igdb_id = %s
+        """
+        cursor.execute(user_query, (user_id, igdb_id))
+        user_data = cursor.fetchone()
+        
+    except Error as e:
+        flash(f"Error retrieving game details: {e}", "danger")
+        print(f"Error retrieving game details for game {igdb_id}: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+    
+    # Pass game data and user data to the template
+    return render_template('game_details.html', 
+                          game=game_data, 
+                          user_data=user_data,
+                          logged_in=True)
 
 if __name__ == '__main__':
     # debug=True is helpful for development but should be False in production

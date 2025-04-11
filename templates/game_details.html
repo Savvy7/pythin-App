@@ -1,0 +1,1028 @@
+{% extends "base.html" %}
+
+{% block title %}{{ game.title }}{% endblock %}
+
+{% block content %}
+<div class="game-details-container">
+    <!-- Back button -->
+    <div class="back-link">
+        <a href="{{ url_for('my_library') }}"><i class="fas fa-arrow-left"></i> Back to Library</a>
+    </div>
+
+    <!-- Game header with cover and basic info -->
+    <div class="game-header">
+        <div class="game-cover-large">
+            {% if game.cover %}
+                <img src="https:{{ game.cover|replace('t_thumb', 't_cover_big') }}" alt="{{ game.title }} cover">
+            {% else %}
+                <img src="https://placehold.co/400x600/252a31/555?text=No+Cover" alt="No cover available">
+            {% endif %}
+        </div>
+        
+        <div class="game-header-info">
+            <h1 class="game-title">{{ game.title }}</h1>
+            
+            <div class="game-meta">
+                {% if game.developer %}
+                <div class="meta-item">
+                    <span class="meta-label">Developer:</span>
+                    <span class="meta-tag">{{ game.developer }}</span>
+                </div>
+                {% endif %}
+                
+                {% if game.publisher %}
+                <div class="meta-item">
+                    <span class="meta-label">Publisher:</span>
+                    <span class="meta-tag">{{ game.publisher }}</span>
+                </div>
+                {% endif %}
+                
+                {% if game.release_date %}
+                <div class="meta-item">
+                    <span class="meta-label">Release Date:</span>
+                    <span class="meta-tag">{{ game.release_date }}</span>
+                </div>
+                {% endif %}
+                
+                {% if game.rating %}
+                <div class="meta-item">
+                    <span class="meta-label">IGDB Rating:</span>
+                    <span class="meta-value">
+                        <div class="rating-bar">
+                            <div class="rating-fill" style="width: {{ (game.rating / 100 * 100)|int }}%"></div>
+                        </div>
+                        <span class="rating-text">{{ (game.rating / 10)|round(1) }}/10</span>
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if user_data and user_data.personal_rating %}
+                <div class="meta-item">
+                    <span class="meta-label">My Rating:</span>
+                    <span class="meta-value">
+                        <div class="my-rating">
+                            {% for i in range(1, 11) %}
+                                {% if user_data.personal_rating is not none and i <= user_data.personal_rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="rating-text">{{ user_data.personal_rating }}/10</span>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="game-platforms">
+                {% if game.platforms %}
+                    {% set platforms = game.platforms %}
+                    {% if platforms is string %}
+                        {% set platforms = platforms|tojson|fromjson %}
+                    {% endif %}
+                    {% for platform in platforms|sort %}
+                        <span class="platform-badge">{{ platform }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="game-status-bar">
+                <div class="status-label">Status:</div>
+                <div class="status-value status-{{ user_data.status|default('backlog')|lower }}">
+                    {{ user_data.status|default('Not Started')|title }}
+                </div>
+                
+
+                <button class="btn-update" data-bs-toggle="modal" data-bs-target="#updateGameModal">
+                    <i class="fas fa-edit"></i> Update Status
+                </button>
+                
+                <button class="btn-remove" data-bs-toggle="modal" data-bs-target="#removeGameModal">
+                    <i class="fas fa-trash"></i> Remove from Library
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game info tabs -->
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="overview">Overview</button>
+            <button class="tab-btn" data-tab="details">Details</button>
+            <button class="tab-btn" data-tab="my-notes">My Notes</button>
+        </div>
+        
+        <div class="tab-content">
+            <!-- Overview Tab -->
+            <div class="tab-pane active" id="overview">
+                {% if game.summary %}
+                <div class="summary-section">
+                    <h2>Summary</h2>
+                    <p>{{ game.summary }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="info-grid">
+                    {% if game.genres %}
+                    <div class="info-card">
+                        <h3><i class="fas fa-tag"></i> Genres</h3>
+                        <div class="tag-container">
+                            {% set genres = game.genres %}
+                            {% if genres is string %}
+                                {% set genres = genres|tojson|fromjson %}
+                            {% endif %}
+                            {% for genre in genres %}
+                                <span class="tag">{{ genre }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if game.themes %}
+                    <div class="info-card">
+                        <h3><i class="fas fa-palette"></i> Themes</h3>
+                        <div class="tag-container">
+                            {% set themes = game.themes %}
+                            {% if themes is string %}
+                                {% set themes = themes|tojson|fromjson %}
+                            {% endif %}
+                            {% for theme in themes %}
+                                <span class="tag">{{ theme }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if game.game_modes %}
+                    <div class="info-card">
+                        <h3><i class="fas fa-users"></i> Game Modes</h3>
+                        <div class="tag-container">
+                            {% set game_modes = game.game_modes %}
+                            {% if game_modes is string %}
+                                {% set game_modes = game_modes|tojson|fromjson %}
+                            {% endif %}
+                            {% for mode in game_modes %}
+                                <span class="tag">{{ mode }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if game.franchises %}
+                    <div class="info-card">
+                        <h3><i class="fas fa-bookmark"></i> Franchises</h3>
+                        <div class="tag-container">
+                            {% set franchises = game.franchises %}
+                            {% if franchises is string %}
+                                {% set franchises = franchises|tojson|fromjson %}
+                            {% endif %}
+                            {% for franchise in franchises %}
+                                <span class="tag">{{ franchise }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Details Tab -->
+            <div class="tab-pane" id="details">
+                <div class="details-grid">
+                    <div class="details-section">
+                        <h3>Technical Details</h3>
+                        <table class="details-table">
+                            {% if game.game_engines %}
+                            <tr>
+                                <td class="detail-label">Engine:</td>
+                                <td class="detail-value">
+                                    {% set engines = game.game_engines %}
+                                    {% if engines is string %}
+                                        {% set engines = engines|tojson|fromjson %}
+                                    {% endif %}
+                                    {{ engines|join(', ') }}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if game.igdb_id %}
+                            <tr>
+                                <td class="detail-label">IGDB ID:</td>
+                                <td class="detail-value">{{ game.igdb_id }}</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if game.install_size %}
+                            <tr>
+                                <td class="detail-label">Install Size:</td>
+                                <td class="detail-value">{{ game.install_size }}</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if game.time_to_complete %}
+                            <tr>
+                                <td class="detail-label">Time to Complete:</td>
+                                <td class="detail-value">{{ game.time_to_complete }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                    
+                    <div class="details-section">
+                        <h3>Library Information</h3>
+                        <table class="details-table">
+                            {% if user_data %}
+                            <tr>
+                                <td class="detail-label">Added to Library:</td>
+                                <td class="detail-value">{{ user_data.date_added|default('-') }}</td>
+                            </tr>
+                            <tr>
+                                <td class="detail-label">Status:</td>
+                                <td class="detail-value status-{{ user_data.status|default('backlog')|lower }}">{{ user_data.status|default('Not Started')|title }}</td>
+                            </tr>
+                            <tr>
+                                <td class="detail-label">My Rating:</td>
+                                <td class="detail-value">{{ user_data.personal_rating|default('-') }}/10</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center">No library data available</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                    
+                    {% if game.platforms %}
+                    <div class="details-section">
+                        <h3>Available Platforms</h3>
+                        <ul class="platforms-list">
+                            {% set platforms = game.platforms %}
+                            {% if platforms is string %}
+                                {% set platforms = platforms|tojson|fromjson %}
+                            {% endif %}
+                            {% for platform in platforms|sort %}
+                                <li><span class="platform-icon"></span> {{ platform }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if game.series or game.franchises %}
+                    <div class="details-section">
+                        <h3>Series & Franchises</h3>
+                        {% if game.series %}
+                        <div class="detail-group">
+                            <div class="detail-label">Series:</div>
+                            <div class="detail-value">
+                                {% set series = game.series %}
+                                {% if series is string %}
+                                    {% set series = series|tojson|fromjson %}
+                                {% endif %}
+                                {{ series|join(', ') }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if game.franchises %}
+                        <div class="detail-group">
+                            <div class="detail-label">Franchises:</div>
+                            <div class="detail-value">
+                                {% set franchises = game.franchises %}
+                                {% if franchises is string %}
+                                    {% set franchises = franchises|tojson|fromjson %}
+                                {% endif %}
+                                {{ franchises|join(', ') }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- My Notes Tab -->
+            <div class="tab-pane" id="my-notes">
+                <div class="notes-container">
+                    <h4>Your Review</h4>
+
+                    {% if user_data and user_data.review %}
+                        <p>{{ user_data.review|replace('\n', '<br>')|safe }}</p>
+                         <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#updateGameModal">
+                             <i class="fas fa-edit"></i> Edit Review
+                         </button>
+                    {% else %}
+                        <p>No review added yet.</p>
+                        <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#updateGameModal">
+                            <i class="fas fa-edit"></i> Add Review
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Game Modal -->
+<div class="modal-container" id="updateGameModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Update {{ game.title }}</h3>
+            <button class="modal-close" data-modal-close="#updateGameModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form action="{{ url_for('update_game_status', igdb_id=game.igdb_id) }}" method="post">
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" class="form-select">
+                        <option value="playing" {% if user_data and user_data.status == 'playing' %}selected{% endif %}>Playing</option>
+                        <option value="completed" {% if user_data and user_data.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="backlog" {% if user_data and user_data.status == 'backlog' %}selected{% endif %}>Backlog</option>
+                        <option value="abandoned" {% if user_data and user_data.status == 'abandoned' %}selected{% endif %}>Abandoned</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rating (1-10)</label>
+                    <div class="rating-input">
+                        <input type="number" name="rating" min="1" max="10" value="{{ user_data.personal_rating if user_data else '' }}" class="form-input">
+                        <div class="stars-container">
+                            {% for i in range(1, 11) %}
+                                <i class="star-rating {% if user_data and user_data.personal_rating is not none and i <= user_data.personal_rating %}fas{% else %}far{% endif %} fa-star" data-rating="{{ i }}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Review</label>
+                    <textarea name="review" class="form-textarea" rows="5">{{ user_data.review if user_data else '' }}</textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Game Modal -->
+<div class="modal-container" id="removeGameModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Remove Game</h3>
+            <button class="modal-close" data-modal-close="#removeGameModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to remove "{{ game.title }}" from your library?</p>
+            <div class="form-actions">
+                <button class="btn-secondary" data-modal-close="#removeGameModal">Cancel</button>
+                <form action="{{ url_for('remove_game', igdb_id=game.igdb_id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn-danger">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .game-details-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .back-link {
+        margin-bottom: 1.5rem;
+    }
+    
+    .back-link a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    
+    .back-link a:hover {
+        color: var(--text-primary);
+    }
+    
+    /* Game Header */
+    .game-header {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .game-cover-large {
+        flex-shrink: 0;
+        width: 300px;
+        height: 450px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .game-cover-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .game-header-info {
+        flex: 1;
+        min-width: 300px;
+    }
+    
+    .game-title {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+    }
+    
+    .game-meta {
+        margin-bottom: 1.5rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        margin-bottom: 0.8rem;
+    }
+    
+    .meta-label {
+        font-weight: 600;
+        min-width: 120px;
+        color: var(--text-secondary);
+    }
+    
+    .meta-value {
+        flex: 1;
+    }
+    
+    .rating-bar {
+        height: 8px;
+        width: 150px;
+        background-color: var(--sidebar-bg);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    
+    .rating-fill {
+        height: 100%;
+        background-color: var(--accent-blue);
+    }
+    
+    .rating-text {
+        margin-left: 0.5rem;
+        vertical-align: middle;
+    }
+    
+    .my-rating {
+        display: inline-block;
+        color: var(--warning-color);
+        margin-right: 0.5rem;
+    }
+    
+    .game-platforms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .platform-badge {
+        background-color: var(--sidebar-bg);
+        color: var(--text-secondary);
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .meta-tag {
+        background-color: var(--sidebar-bg);
+        color: var(--text-secondary);
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        display: inline-block; /* Ensure padding and background apply correctly */
+    }
+    
+    .game-status-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background-color: var(--card-bg);
+        padding: 1rem;
+        border-radius: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .status-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+    
+    .status-value {
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .status-playing {
+        background-color: rgba(53, 191, 92, 0.2);
+        color: var(--success-color);
+    }
+    
+    .status-completed {
+        background-color: rgba(76, 201, 240, 0.2);
+        color: var(--info-color);
+    }
+    
+    .status-backlog {
+        background-color: rgba(255, 204, 41, 0.2);
+        color: var(--warning-color);
+    }
+    
+    .status-abandoned {
+        background-color: rgba(230, 57, 70, 0.2);
+        color: var(--danger-color);
+    }
+    
+    .btn-update, .btn-remove {
+        margin-left: auto;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-update {
+        background-color: var(--sidebar-bg);
+        color: var(--text-primary);
+    }
+    
+    .btn-update:hover {
+        background-color: var(--accent-blue);
+        color: white;
+    }
+    
+    .btn-remove {
+        background-color: rgba(230, 57, 70, 0.1);
+        color: var(--danger-color);
+    }
+    
+    .btn-remove:hover {
+        background-color: var(--danger-color);
+        color: white;
+    }
+    
+    /* Tabs */
+    .tabs-container {
+        margin-top: 2rem;
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .tabs {
+        display: flex;
+        background-color: var(--sidebar-bg);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .tab-btn {
+        padding: 1rem 1.5rem;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+        position: relative;
+    }
+    
+    .tab-btn:hover {
+        color: var(--text-primary);
+    }
+    
+    .tab-btn.active {
+        color: var(--accent-blue);
+        font-weight: 600;
+    }
+    
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--accent-blue);
+    }
+    
+    .tab-content {
+        padding: 1.5rem;
+    }
+    
+    .tab-pane {
+        display: none;
+    }
+    
+    .tab-pane.active {
+        display: block;
+    }
+    
+    /* Overview Tab */
+    .summary-section {
+        margin-bottom: 2rem;
+    }
+    
+    .summary-section h2 {
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .summary-section p {
+        line-height: 1.6;
+        color: var(--text-secondary);
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .info-card {
+        background-color: var(--sidebar-bg);
+        border-radius: 8px;
+        padding: 1.2rem;
+    }
+    
+    .info-card h3 {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .tag {
+        background-color: rgba(44, 92, 188, 0.1);
+        color: var(--accent-blue);
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    /* Details Tab */
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .details-section {
+        background-color: var(--sidebar-bg);
+        border-radius: 8px;
+        padding: 1.2rem;
+    }
+    
+    .details-section h3 {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+    
+    .details-table {
+        width: 100%;
+    }
+    
+    .details-table tr {
+        border-bottom: 1px solid rgba(52, 58, 64, 0.3);
+    }
+    
+    .details-table tr:last-child {
+        border-bottom: none;
+    }
+    
+    .details-table td {
+        padding: 0.8rem 0;
+    }
+    
+    .detail-label {
+        color: var(--text-secondary);
+        font-weight: 600;
+        width: 40%;
+    }
+    
+    .detail-group {
+        margin-bottom: 1rem;
+    }
+    
+    .platforms-list {
+        list-style: none;
+    }
+    
+    .platforms-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(52, 58, 64, 0.3);
+        display: flex;
+        align-items: center;
+    }
+    
+    .platforms-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .platform-icon {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: var(--accent-blue);
+        border-radius: 50%;
+        margin-right: 0.8rem;
+    }
+    
+    /* My Notes Tab */
+    .notes-container {
+        background-color: var(--sidebar-bg);
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    
+    .notes-container h3 {
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+    }
+    
+    .review-content {
+        line-height: 1.6;
+        color: var(--text-secondary);
+        white-space: pre-wrap;
+    }
+    
+    .empty-review {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+    
+    .empty-review p {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Star Rating */
+    .rating-input {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stars-container {
+        display: flex;
+        gap: 0.3rem;
+    }
+    
+    .star-rating {
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    
+    .star-rating.fas {
+        color: var(--warning-color);
+    }
+    
+    /* Modal Styles (same as in my_library.html) */
+    .modal-container {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modal-container.active {
+        display: flex;
+    }
+    
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-content {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        z-index: 1001;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        cursor: pointer;
+    }
+    
+    .modal-close:hover {
+        color: var(--text-primary);
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .form-select, .form-input, .form-textarea {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        background-color: var(--sidebar-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        transition: border-color 0.2s;
+    }
+    
+    .form-select:focus, .form-input:focus, .form-textarea:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .game-header {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .game-cover-large {
+            width: 200px;
+            height: 300px;
+        }
+        
+        .game-title {
+            font-size: 1.8rem;
+            text-align: center;
+        }
+        
+        .game-status-bar {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .btn-update, .btn-remove {
+            margin-left: 0;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .tabs {
+            flex-direction: column;
+        }
+        
+        .tab-btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active button
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show corresponding tab pane
+            const tabId = this.getAttribute('data-tab');
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+    
+    // Star rating functionality
+    const stars = document.querySelectorAll('.star-rating');
+    const ratingInput = document.querySelector('input[name="rating"]');
+    
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            
+            // Update input value
+            ratingInput.value = rating;
+            
+            // Update star visuals
+            stars.forEach(s => {
+                const starRating = parseInt(s.getAttribute('data-rating'));
+                if (starRating <= rating) {
+                    s.classList.remove('far');
+                    s.classList.add('fas');
+                } else {
+                    s.classList.remove('fas');
+                    s.classList.add('far');
+                }
+            });
+        });
+    });
+    
+    // Modal functionality
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const target = this.getAttribute('data-bs-target');
+            document.querySelector(target).classList.add('active');
+        });
+    });
+    
+    document.querySelectorAll('[data-modal-close]').forEach(button => {
+        button.addEventListener('click', function() {
+            const target = this.getAttribute('data-modal-close');
+            document.querySelector(target).classList.remove('active');
+        });
+    });
+    
+    // Close modal when clicking on overlay
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function() {
+            this.closest('.modal-container').classList.remove('active');
+        });
+    });
+});
+</script>
+{% endblock %}
