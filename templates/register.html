@@ -3,56 +3,123 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h1><i class="fas fa-user-plus"></i> Register</h1>
-            <p>Create your game tracker account</p>
-        </div>
+    <div class="auth-container">
+        <h1>Create Account</h1>
+        <p class="auth-subtitle">Join our gaming community</p>
         
         <form method="post" action="{{ url_for('register') }}" class="auth-form">
             <div class="form-group">
                 <label for="username">Username</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="username" name="username" placeholder="Choose a username" required>
-                </div>
+                <input type="text" id="username" name="username" required autocomplete="username">
             </div>
             
             <div class="form-group">
                 <label for="email">Email</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
-                </div>
+                <input type="email" id="email" name="email" required autocomplete="email">
             </div>
             
             <div class="form-group">
                 <label for="password">Password</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" name="password" placeholder="Create a password" required>
-                </div>
-                <div class="form-hint">Password must be at least 8 characters long.</div>
+                <input type="password" id="password" name="password" required autocomplete="new-password">
             </div>
             
-            <button type="submit" class="btn-primary btn-full">
-                Create Account
-            </button>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Register</button>
+            </div>
         </form>
         
         <div class="auth-footer">
-            <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+            <p>Already have an account? <a href="{{ url_for('login') }}" class="auth-link">Login here</a></p>
         </div>
     </div>
-</div>
+{% endblock %}
 
+{% block extra_css %}
 <style>
-    .form-hint {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        margin-top: 0.5rem;
-        margin-left: 0.2rem;
+    .auth-container {
+        max-width: 450px;
+        margin: 0 auto;
+    }
+    
+    h1 {
+        font-size: 2.2rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-text);
+        text-align: center;
+    }
+    
+    .auth-subtitle {
+        text-align: center;
+        color: var(--secondary-text);
+        margin-bottom: 2rem;
+    }
+    
+    .auth-form {
+        margin-bottom: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--primary-text);
+        font-weight: 500;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 12px 16px;
+        background-color: #2a2a2a;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        color: var(--primary-text);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+        outline: none;
+    }
+    
+    .form-actions {
+        margin-top: 2rem;
+    }
+    
+    .btn-primary {
+        width: 100%;
+        padding: 12px 20px;
+        background-color: var(--accent-blue);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--accent-blue-hover);
+    }
+    
+    .auth-footer {
+        text-align: center;
+        color: var(--secondary-text);
+    }
+    
+    .auth-link {
+        color: var(--accent-blue);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .auth-link:hover {
+        text-decoration: underline;
     }
 </style>
 {% endblock %}

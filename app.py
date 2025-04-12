@@ -81,19 +81,25 @@ def search():
         
     # Use cached access token
     global access_token
+    print(f"Using access token: {access_token[:10]}...") # Print first 10 chars of token
+    
     if not access_token:
-        access_token = igdb_api.get_igdb_access_token(IGDB_CLIENT_ID, IGDB_CLIENT_SECRET)
+        print("No access token found, getting a new one")
+        # access_token = igdb_api.get_igdb_access_token(IGDB_CLIENT_ID, IGDB_CLIENT_SECRET)
+        access_token = "w6ezcp83w1wty5iqqp3ze1mt0x32fj"
         if not access_token:
             flash("Failed to authenticate with IGDB API", "danger")
             return render_template('search_results.html', games=[], logged_in=('user_id' in session))
-            
+    
+    print(f"Searching for games with query: '{query}'")
     game_data = igdb_api.get_igdb_games(query, IGDB_CLIENT_ID, access_token)
+    print(f"API returned: {game_data}")
+    
     if not game_data:
         flash(f"No games found for '{query}'", "info")
         return render_template('search_results.html', games=[], logged_in=('user_id' in session))
         
     return render_template('search_results.html', games=game_data, logged_in=('user_id' in session))
-
 # --- Authentication Routes ---
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -429,6 +435,69 @@ def game_details(igdb_id):
                           game=game_data, 
                           user_data=user_data,
                           logged_in=True)
+
+# Add a new route for all games
+@app.route('/games')
+def all_games():
+    """Display all games in the database."""
+    conn = get_db_connection()
+    if not conn:
+        flash("Database connection error", "danger")
+        return redirect(url_for('index'))
+    
+    cursor = conn.cursor(dictionary=True)
+    games = []
+    user_library_ids = []
+    
+    try:
+        # Get all games from the database
+        cursor.execute("SELECT * FROM local_games ORDER BY title ASC")
+        games = cursor.fetchall()
+        
+        # Parse JSON fields for each game
+        for game in games:
+            json_fields = ['platforms', 'genres', 'game_modes', 'series', 'franchises', 'themes', 'game_engines', 'tags']
+            for field in json_fields:
+                if field in game and game[field]:
+                    try:
+                        if isinstance(game[field], str):
+                            game[field] = json.loads(game[field])
+                    except (json.JSONDecodeError, TypeError):
+                        game[field] = []
+                else:
+                    game[field] = []
+        
+        # Get unique list of genres and platforms for filters
+        all_genres = set()
+        all_platforms = set()
+        for game in games:
+            for genre in game['genres']:
+                all_genres.add(genre)
+            for platform in game['platforms']:
+                all_platforms.add(platform)
+        
+        # Get user's library game IDs for "Add to Library" button logic
+        if 'user_id' in session:
+            cursor.execute(
+                "SELECT game_igdb_id FROM user_tracked_games WHERE user_id = %s",
+                (session['user_id'],)
+            )
+            user_library = cursor.fetchall()
+            user_library_ids = [game['game_igdb_id'] for game in user_library]
+            
+    except Error as e:
+        flash(f"Error retrieving games: {e}", "danger")
+        print(f"Error retrieving games: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return render_template('all_games.html', 
+                          games=games, 
+                          genres=sorted(all_genres),
+                          platforms=sorted(all_platforms),
+                          user_library_ids=user_library_ids,
+                          logged_in=('user_id' in session))
 
 if __name__ == '__main__':
     # debug=True is helpful for development but should be False in production

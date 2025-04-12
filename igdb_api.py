@@ -66,7 +66,7 @@ def get_igdb_games(query, client_id=IGDB_CLIENT_ID, access_token=None):
     
     # Query to get basic game info
     query_str = f'''
-    fields id, name, cover.url, release_dates.human;
+    fields id, name, cover.url, release_dates.human, summary, genres.name;
     search "{query}";
     limit 10;
     '''

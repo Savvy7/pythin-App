@@ -41,7 +41,7 @@ def fetch_top_games(access_token):
            game_modes.name, collections.name, franchises.name, themes.name, game_engines.name;
     where total_rating != null & total_rating_count >= 50 & version_parent = null;
     sort total_rating desc;
-    limit 100; 
+    limit 500; 
     '''
 
     url = 'https://api.igdb.com/v4/games'
@@ -84,7 +84,7 @@ def fetch_top_games(access_token):
 
 
     # Sort by weighted rating and get top 100
-    return sorted(games, key=lambda x: x['weighted_rating'], reverse=True)[:100]
+    return sorted(games, key=lambda x: x['weighted_rating'], reverse=True)[:500]
 
 def add_game_to_db(igdb_id, access_token):
     """Fetches a game by ID from IGDB and adds it to the local_games table"""
@@ -202,7 +202,7 @@ def add_game_to_db(igdb_id, access_token):
             json.dumps(game.get('franchises', [])),
             json.dumps(game.get('themes', [])),
             json.dumps(game.get('game_engines', [])),
-            json.dumps([]),  # Placeholder for tags
+            # json.dumps([]),  # Placeholder for tags
             game.get('weighted_rating')
         ))
         
@@ -230,45 +230,44 @@ def store_games_in_db(games):
         )
         cursor = connection.cursor()
 
-        # Drop existing table
-        print("Dropping existing local_games table (if exists)...")
-        cursor.execute("DROP TABLE IF EXISTS local_games")
+        # # Drop existing table
+        # print("Dropping existing local_games table (if exists)...")
+        # cursor.execute("DROP TABLE IF EXISTS local_games")
 
-        # Create new table with updated schema
-        print("Creating new local_games table...")
-        create_table_query = """
-        CREATE TABLE local_games (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            title TEXT NOT NULL,
-            igdb_id INT UNIQUE,
-            cover TEXT,
-            release_date TEXT,
-            platforms JSON,
-            genres JSON,
-            rating INT,
-            summary TEXT,
-            metadata JSON,
-            developer TEXT,
-            publisher TEXT,
-            game_modes JSON,
-            series JSON,
-            franchises JSON,
-            themes JSON,
-            game_engines JSON,
-            tags JSON, -- Kept tags column, though not fetching specific tag data currently
-            weighted_rating FLOAT
-        )
-        """
-        cursor.execute(create_table_query)
-        print("Local_games table created successfully.")
+        # # Create new table with updated schema
+        # print("Creating new local_games table...")
+        # create_table_query = """
+        # CREATE TABLE local_games (
+        #     id INT AUTO_INCREMENT PRIMARY KEY,
+        #     title TEXT NOT NULL,
+        #     igdb_id INT UNIQUE,
+        #     cover TEXT,
+        #     release_date TEXT,
+        #     platforms JSON,
+        #     genres JSON,
+        #     rating INT,
+        #     summary TEXT,
+        #     metadata JSON,
+        #     developer TEXT,
+        #     publisher TEXT,
+        #     game_modes JSON,
+        #     series JSON,
+        #     franchises JSON,
+        #     themes JSON,
+        #     game_engines JSON,
+        #     weighted_rating FLOAT
+        # )
+        # """
+        # cursor.execute(create_table_query)
+        # print("Local_games table created successfully.")
 
         # Insert new games
         print(f"Inserting {len(games)} games...")
         insert_query = """
         INSERT INTO local_games (
             igdb_id, title, cover, release_date, platforms, genres, rating, summary, metadata,
-            developer, publisher, game_modes, series, franchises, themes, game_engines, tags, weighted_rating
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            developer, publisher, game_modes, series, franchises, themes, game_engines, weighted_rating
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         
         values_list = []
@@ -290,7 +289,7 @@ def store_games_in_db(games):
                 json.dumps(game.get('franchises', [])),
                 json.dumps(game.get('themes', [])),
                 json.dumps(game.get('game_engines', [])),
-                json.dumps([]),  # Placeholder for tags
+                  # Placeholder for tags
                 game['weighted_rating']
             ))
 

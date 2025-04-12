@@ -3,182 +3,270 @@
 {% block title %}Search Results{% endblock %}
 
 {% block content %}
-    <div class="search-header">
+    <div class="search-results-header">
         <h1>Search Results</h1>
-        
-        <form action="{{ url_for('search') }}" method="get" class="search-form">
-            <div class="search-input-container">
-                <i class="fas fa-search"></i>
-                <input type="text" name="query" placeholder="Search for games..." value="{{ request.args.get('query', '') }}" required>
-                <button type="submit" class="search-btn">Search</button>
-            </div>
-        </form>
+        <a href="{{ url_for('index') }}" class="back-button">
+            <span>←</span> New Search
+        </a>
     </div>
-
+    
     {% if games %}
-        <div class="results-count">
-            Found {{ games|length }} game{{ 's' if games|length != 1 else '' }}
-        </div>
-        
-        <div class="game-grid">
+        <div class="game-results">
             {% for game in games %}
                 <div class="game-card">
-                    <div class="game-cover-container">
+                    <div class="game-cover">
                         {% if game.cover %}
-                            <img src="https:{{ game.cover }}" alt="{{ game.name }} cover" class="game-cover">
+                            {% set cover_url = game.cover.url|replace('/t_thumb/', '/t_cover_big/') %}
+                            <img src="https:{{ cover_url }}" alt="{{ game.name }} cover">
                         {% else %}
-                            <img src="https://placehold.co/400x600/252a31/555?text=No+Cover" alt="No cover available" class="game-cover">
+                            <div class="game-cover-placeholder">
+                                <span>{{ game.name[:2].upper() }}</span>
+                            </div>
                         {% endif %}
                     </div>
-                    <div class="game-card-body">
-                        <h3 class="game-title" title="{{ game.name }}">{{ game.name }}</h3>
+                    
+                    <div class="game-info">
+                        <h3 class="game-title">{{ game.name }}</h3>
+                        
                         <div class="game-meta">
-                            <span class="game-release">
-                                {% if game.release_date %}
-                                    {{ game.release_date }}
-                                {% else %}
-                                    Unknown
-                                {% endif %}
-                            </span>
-                            {% if game.platforms %}
-                                <span class="game-platform">
-                                    {{ game.platforms[0] }}
+                            {% if game.release_dates and game.release_dates[0].human %}
+                                <span class="release-date">Released: {{ game.release_dates[0].human }}</span>
+                            {% endif %}
+                            
+                            {% if game.genres %}
+                                <span class="genres">
+                                    Genres: 
+                                    {% for genre in game.genres %}
+                                        {{ genre.name }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
                                 </span>
                             {% endif %}
                         </div>
+                        
+                        {% if game.summary %}
+                            <div class="game-summary">
+                                {{ game.summary[:150] }}{% if game.summary|length > 150 %}...{% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="game-actions">
+                            <a href="/add_game/{{ game.id }}" class="add-button">
+                                <span class="button-icon">+</span>
+                                Add to Library
+                            </a>
+                        </div>
                     </div>
-                    {% if logged_in %}
-                    <a href="{{ url_for('add_game', igdb_id=game.id) }}" class="add-game-btn" title="Add to library">
-                        <i class="fas fa-plus"></i>
-                    </a>
-                    {% else %}
-                    <a href="{{ url_for('login') }}" class="add-game-btn login-required" title="Login to add">
-                        <i class="fas fa-lock"></i>
-                    </a>
-                    {% endif %}
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <div class="empty-results">
-            <div class="empty-results-message">
-                <i class="fas fa-search fa-4x"></i>
-                {% if request.args.get('query') %}
-                    <h2>No games found</h2>
-                    <p>We couldn't find any games matching your search. Try different keywords or check your spelling.</p>
-                {% else %}
-                    <h2>Search for games</h2>
-                    <p>Enter a game title, developer, or genre in the search box above to find games.</p>
-                {% endif %}
-            </div>
+        <div class="no-results">
+            <div class="empty-icon">🔍</div>
+            <h2>No games found</h2>
+            <p>Try another search term or check your spelling.</p>
+            <a href="{{ url_for('index') }}" class="back-link">Back to Search</a>
         </div>
     {% endif %}
+{% endblock %}
 
-    <style>
-        .search-header {
-            margin-bottom: 2rem;
+{% block extra_css %}
+<style>
+    .search-results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    h1 {
+        font-size: 2.2rem;
+        color: var(--primary-text);
+        margin: 0;
+    }
+    
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        color: var(--accent-blue);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .back-button:hover {
+        color: var(--accent-blue-hover);
+        transform: translateX(-3px);
+    }
+    
+    .back-button span {
+        margin-right: 5px;
+    }
+    
+    .game-results {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .game-card {
+        display: flex;
+        background-color: #1a1a1a;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .game-cover {
+        width: 200px;
+        height: 300px;
+        flex-shrink: 0;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #0f0f0f;
+    }
+    
+    .game-cover img {
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+    
+    .game-card:hover .game-cover img {
+        transform: scale(1.05);
+    }
+    
+    .game-cover-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+        color: var(--secondary-text);
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .game-info {
+        padding: 20px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .game-title {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+        color: var(--primary-text);
+        line-height: 1.3;
+    }
+    
+    .game-meta {
+        margin-bottom: 15px;
+        color: var(--secondary-text);
+        font-size: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .release-date, .genres {
+        display: block;
+    }
+    
+    .game-summary {
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: var(--primary-text);
+        opacity: 0.9;
+    }
+    
+    .game-actions {
+        margin-top: auto;
+    }
+    
+    .add-button {
+        display: inline-flex;
+        align-items: center;
+        background-color: var(--accent-blue);
+        color: white;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+    }
+    
+    .add-button:hover {
+        background-color: var(--accent-blue-hover);
+    }
+    
+    .button-icon {
+        margin-right: 8px;
+        font-weight: bold;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .no-results h2 {
+        font-size: 1.8rem;
+        color: var(--primary-text);
+        margin-bottom: 1rem;
+    }
+    
+    .no-results p {
+        color: var(--secondary-text);
+        margin-bottom: 2rem;
+    }
+    
+    .back-link {
+        display: inline-block;
+        background-color: var(--accent-blue);
+        color: white;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+    }
+    
+    .back-link:hover {
+        background-color: var(--accent-blue-hover);
+    }
+    
+    @media (max-width: 768px) {
+        .game-card {
+            flex-direction: column;
         }
-
-        .search-form {
-            max-width: 600px;
-            margin-top: 1rem;
+        
+        .game-cover {
+            width: 100%;
+            height: 250px;
         }
-
-        .search-input-container {
-            position: relative;
-            display: flex;
+        
+        .game-title {
+            font-size: 1.2rem;
         }
-
-        .search-input-container input {
-            flex: 1;
-            padding: 0.8rem 1rem 0.8rem 2.5rem;
-            background-color: var(--sidebar-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px 0 0 4px;
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-
-        .search-input-container i {
-            position: absolute;
-            left: 0.8rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-        }
-
-        .search-btn {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 0 4px 4px 0;
-            padding: 0 1.2rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .search-btn:hover {
-            background-color: var(--accent-blue-hover);
-        }
-
-        .results-count {
-            margin-bottom: 1.5rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .add-game-btn {
-            position: absolute;
-            bottom: 0.8rem;
-            right: 0.8rem;
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
-            background-color: var(--accent-blue);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s, background-color 0.2s;
-            z-index: 5;
-        }
-
-        .add-game-btn:hover {
-            transform: scale(1.1);
-            background-color: var(--accent-blue-hover);
-        }
-
-        .login-required {
-            background-color: var(--text-secondary);
-        }
-
-        .empty-results {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 60vh;
-        }
-
-        .empty-results-message {
-            text-align: center;
-            color: var(--text-secondary);
-            max-width: 400px;
-        }
-
-        .empty-results-message i {
-            margin-bottom: 1.5rem;
-            opacity: 0.5;
-        }
-
-        .empty-results-message h2 {
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .empty-results-message p {
-            line-height: 1.5;
-        }
-    </style>
+    }
+</style>
 {% endblock %}

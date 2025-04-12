@@ -1,504 +1,172 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Tracker - {% block title %}{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
     <style>
         :root {
-            --dark-bg: #1a1d21;
-            --darker-bg: #171a1d;
-            --sidebar-bg: #202429;
-            --card-bg: #252a31;
-            --accent-blue: #2c5cbc;
-            --accent-blue-hover: #3a6fd3;
-            --text-primary: #ffffff;
-            --text-secondary: #9aa0a9;
-            --border-color: #343a40;
-            --success-color: #35bf5c;
-            --warning-color: #ffcc29;
-            --danger-color: #e63946;
-            --info-color: #4cc9f0;
+            --primary-bg: #121212;
+            --secondary-bg: #1e1e1e;
+            --primary-text: #e0e0e0;
+            --secondary-text: #a0a0a0;
+            --accent-blue: #2196f3;
+            --accent-blue-hover: #0d8aee;
+            --success-bg: #0d3a26;
+            --success-text: #4caf50;
+            --danger-bg: #3e1a1a;
+            --danger-text: #f44336;
+            --warning-bg: #332211;
+            --warning-text: #ff9800;
+            --info-bg: #1a2a33;
+            --info-text: #03a9f4;
         }
-
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-primary);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
         }
-
-        /* Top Navigation Bar */
-        .top-bar {
-            background-color: var(--darker-bg);
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            height: 3.5rem;
-            border-bottom: 1px solid var(--border-color);
-            z-index: 100;
+        
+        .container {
             width: 100%;
+            padding: 0 15px;
         }
-
-        .top-bar-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex: 1;
-        }
-
-        .library-dropdown {
-            position: relative;
-        }
-
-        .library-dropdown .dropdown-btn {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .search-bar {
-            position: relative;
-            flex: 1;
-            max-width: 400px;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 0.5rem 1rem 0.5rem 2.5rem;
-            border-radius: 4px;
-            background-color: var(--sidebar-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .search-bar i {
-            position: absolute;
-            left: 0.8rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-        }
-
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .icon-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 0.5rem;
-            font-size: 1.2rem;
-            transition: color 0.2s;
-        }
-
-        .icon-btn:hover {
-            color: var(--text-primary);
-        }
-
-        .user-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-actions a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-
-        .user-actions a:hover {
-            color: var(--text-primary);
-        }
-
-        /* Main Container with Sidebar and Content */
-        .main-container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 220px;
-            background-color: var(--sidebar-bg);
-            height: 100%;
-            overflow-y: auto;
-            padding: 1.5rem 0;
-            flex-shrink: 0;
-        }
-
-        .sidebar-brand {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--accent-blue);
-            margin-bottom: 1.5rem;
-            padding-left: 1.5rem;
-        }
-
-        .sidebar-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .sidebar-section-title {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-            padding: 0 1.5rem;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 0.2rem;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 0.7rem 1.5rem;
-            text-decoration: none;
-            color: var(--text-secondary);
-            transition: background-color 0.2s, color 0.2s;
-            font-size: 0.95rem;
-        }
-
-        .sidebar-menu a:hover {
-            background-color: rgba(44, 92, 188, 0.1);
-            color: var(--text-primary);
-        }
-
-        .sidebar-menu a.active {
-            background-color: rgba(44, 92, 188, 0.2);
-            color: var(--accent-blue);
-            border-left: 3px solid var(--accent-blue);
-        }
-
-        .sidebar-menu a i {
-            margin-right: 0.7rem;
-            width: 20px;
-            text-align: center;
-        }
-
-        /* Main Content Area */
-        .content-area {
-            flex: 1;
-            padding: 1.5rem;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        /* Flash Messages */
+        
         .flash-messages {
-            margin-bottom: 1.5rem;
+            margin: 20px 0;
         }
-
+        
         .flash-message {
-            padding: 0.8rem 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-
-        .flash-message i {
-            margin-right: 0.5rem;
-        }
-
+        
         .success {
-            background-color: rgba(53, 191, 92, 0.15);
-            color: var(--success-color);
-            border: 1px solid rgba(53, 191, 92, 0.3);
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            border-left: 4px solid var(--success-text);
         }
-
+        
         .danger {
-            background-color: rgba(230, 57, 70, 0.15);
-            color: var(--danger-color);
-            border: 1px solid rgba(230, 57, 70, 0.3);
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
+            border-left: 4px solid var(--danger-text);
         }
-
+        
         .warning {
-            background-color: rgba(255, 204, 41, 0.15);
-            color: var(--warning-color);
-            border: 1px solid rgba(255, 204, 41, 0.3);
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+            border-left: 4px solid var(--warning-text);
         }
-
+        
         .info {
-            background-color: rgba(76, 201, 240, 0.15);
-            color: var(--info-color);
-            border: 1px solid rgba(76, 201, 240, 0.3);
+            background-color: var(--info-bg);
+            color: var(--info-text);
+            border-left: 4px solid var(--info-text);
         }
-
-        /* Floating Action Button */
-        .fab {
-            position: fixed;
-            right: 2rem;
-            bottom: 2rem;
-            width: 3.5rem;
-            height: 3.5rem;
-            border-radius: 50%;
-            background-color: var(--accent-blue);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transition: background-color 0.2s;
-            z-index: 10;
-            border: none;
-        }
-
-        .fab:hover {
-            background-color: var(--accent-blue-hover);
-        }
-
-        /* Game Grid for My Library page */
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .game-card {
-            background-color: var(--card-bg);
+        
+        nav {
+            background-color: var(--secondary-bg);
             border-radius: 8px;
-            overflow: hidden;
-            transition: transform 0.2s;
-            position: relative;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .game-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .game-cover-container {
-            position: relative;
-            padding-top: 133%; /* 3:4 aspect ratio for game covers */
-            overflow: hidden;
-        }
-
-        .game-cover {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .game-card-body {
-            padding: 0.8rem;
-        }
-
-        .game-title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .game-meta {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
+            padding: 15px 20px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
-        .game-status {
-            padding: 0.2rem 0.5rem;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            text-transform: uppercase;
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-blue);
         }
-
-        .status-playing {
-            background-color: rgba(53, 191, 92, 0.2);
-            color: var(--success-color);
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
         }
-
-        .status-completed {
-            background-color: rgba(76, 201, 240, 0.2);
-            color: var(--info-color);
+        
+        nav a {
+            color: var(--primary-text);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
-
-        .status-backlog {
-            background-color: rgba(255, 204, 41, 0.2);
-            color: var(--warning-color);
+        
+        nav a:hover {
+            background-color: rgba(33, 150, 243, 0.1);
+            color: var(--accent-blue);
         }
-
-        .status-abandoned {
-            background-color: rgba(230, 57, 70, 0.2);
-            color: var(--danger-color);
+        
+        .content {
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
-        /* Media queries for responsiveness */
-        @media (max-width: 992px) {
-            .sidebar {
-                width: 60px;
-                overflow: visible;
-            }
-
-            .sidebar-brand, .sidebar-section-title, .sidebar-menu a span {
-                display: none;
-            }
-
-            .sidebar-menu a {
-                padding: 0.7rem;
-                display: flex;
-                justify-content: center;
-            }
-
-            .sidebar-menu a i {
-                margin-right: 0;
-            }
-
-            .game-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            }
-        }
-
+        
         @media (max-width: 768px) {
-            .search-bar {
-                display: none;
+            nav {
+                flex-direction: column;
+                gap: 15px;
             }
-
-            .top-bar-right .icon-btn:not(:last-child) {
-                display: none;
-            }
-
-            .game-grid {
-                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
             }
         }
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <div class="top-bar-brand" style="font-size: 1.3rem; font-weight: bold; color: var(--accent-blue); margin-right: 1rem;">Playnite</div>
-
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search library...">
-            </div>
+    <nav>
+        <a href="{{ url_for('index') }}" class="logo">Game Tracker</a>
+        <div class="nav-links">
+            <a href="{{ url_for('all_games') }}">Games</a>
+            {% if logged_in %}
+                <a href="{{ url_for('my_library') }}">My Library</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
         </div>
+    </nav>
 
-        <div class="top-bar-right">
-
-            <div class="user-actions">
-                {% if logged_in %}
-                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
-                    <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+    <div class="container">
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
                 {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Container with Sidebar and Content -->
-    <div class="main-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-
-            <div class="sidebar-section">
-                <ul class="sidebar-menu">
-                    <li><a href="{{ url_for('index') }}" class="{% if request.path == url_for('index') %}active{% endif %}">
-                        <i class="fas fa-home"></i> <span>Home</span>
-                    </a></li>
-                    {% if logged_in %}
-                    <li><a href="{{ url_for('my_library') }}" class="{% if request.path == url_for('my_library') %}active{% endif %}">
-                        <i class="fas fa-gamepad"></i> <span>Library</span>
-                    </a></li>
-                    <li><a href="#">
-                        <i class="fas fa-star"></i> <span>Favorites</span>
-                    </a></li>
-                    <li><a href="#">
-                        <i class="fas fa-chart-bar"></i> <span>Statistics</span>
-                    </a></li>
-                    {% endif %}
-                </ul>
-            </div>
-
+            {% endwith %}
         </div>
 
-        <!-- Main Content Area -->
-        <div class="content-area">
-            <!-- Flash Messages -->
-            <div class="flash-messages">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="flash-message {{ category }}">
-                                {% if category == 'success' %}
-                                    <i class="fas fa-check-circle"></i>
-                                {% elif category == 'danger' %}
-                                    <i class="fas fa-exclamation-circle"></i>
-                                {% elif category == 'warning' %}
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                {% else %}
-                                    <i class="fas fa-info-circle"></i>
-                                {% endif %}
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-            </div>
-
-            <!-- Actual Content -->
+        <div class="content">
             {% block content %}{% endblock %}
         </div>
     </div>
-
-    <!-- Floating Action Button (only on certain pages) -->
-    {% if logged_in and request.path == url_for('my_library') %}
-    <a href="{{ url_for('search') }}" class="fab" title="Add Game">
-        <i class="fas fa-plus"></i>
-    </a>
-    {% endif %}
-
-    <!-- JavaScript (placed at end of document for faster loading) -->
-    <script>
-        // Basic functionality for dropdowns
-        document.addEventListener('DOMContentLoaded', function() {
-            // Additional JavaScript can be added here
-        });
-    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

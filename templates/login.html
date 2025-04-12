@@ -3,148 +3,117 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h1><i class="fas fa-sign-in-alt"></i> Login</h1>
-            <p>Sign in to your game tracker account</p>
-        </div>
+    <div class="auth-container">
+        <h1>Welcome Back</h1>
+        <p class="auth-subtitle">Log in to access your game library</p>
         
         <form method="post" action="{{ url_for('login') }}" class="auth-form">
             <div class="form-group">
                 <label for="username">Username</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
-                </div>
+                <input type="text" id="username" name="username" required autocomplete="username">
             </div>
             
             <div class="form-group">
                 <label for="password">Password</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                </div>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
             </div>
             
-            <button type="submit" class="btn-primary btn-full">
-                Login
-            </button>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Login</button>
+            </div>
         </form>
         
         <div class="auth-footer">
-            <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+            <p>Don't have an account? <a href="{{ url_for('register') }}" class="auth-link">Register here</a></p>
         </div>
     </div>
-</div>
+{% endblock %}
 
+{% block extra_css %}
 <style>
     .auth-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 80vh;
+        max-width: 450px;
+        margin: 0 auto;
     }
     
-    .auth-card {
-        background-color: var(--card-bg);
-        border-radius: 8px;
-        width: 100%;
-        max-width: 420px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
-    }
-    
-    .auth-header {
-        padding: 1.5rem;
-        text-align: center;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .auth-header h1 {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        font-size: 1.6rem;
+    h1 {
+        font-size: 2.2rem;
         margin-bottom: 0.5rem;
+        color: var(--primary-text);
+        text-align: center;
     }
     
-    .auth-header p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
+    .auth-subtitle {
+        text-align: center;
+        color: var(--secondary-text);
+        margin-bottom: 2rem;
     }
     
     .auth-form {
-        padding: 1.5rem;
+        margin-bottom: 2rem;
     }
     
     .form-group {
-        margin-bottom: 1.2rem;
+        margin-bottom: 1.5rem;
     }
     
     .form-group label {
         display: block;
         margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        color: var(--text-secondary);
+        color: var(--primary-text);
+        font-weight: 500;
     }
     
-    .input-with-icon {
-        position: relative;
-    }
-    
-    .input-with-icon i {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-secondary);
-    }
-    
-    .input-with-icon input {
+    .form-group input {
         width: 100%;
-        padding: 0.8rem 1rem 0.8rem 2.5rem;
-        background-color: var(--sidebar-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        color: var(--text-primary);
+        padding: 12px 16px;
+        background-color: #2a2a2a;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        color: var(--primary-text);
         font-size: 1rem;
-        transition: border-color 0.2s;
+        transition: all 0.3s ease;
     }
     
-    .input-with-icon input:focus {
-        outline: none;
+    .form-group input:focus {
         border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+        outline: none;
     }
     
-    .btn-full {
+    .form-actions {
+        margin-top: 2rem;
+    }
+    
+    .btn-primary {
         width: 100%;
-        padding: 0.8rem;
-        font-size: 1rem;
-        margin-top: 1rem;
+        padding: 12px 20px;
+        background-color: var(--accent-blue);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--accent-blue-hover);
     }
     
     .auth-footer {
-        padding: 1.5rem;
         text-align: center;
-        border-top: 1px solid var(--border-color);
+        color: var(--secondary-text);
     }
     
-    .auth-footer p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin: 0;
-    }
-    
-    .auth-footer a {
+    .auth-link {
         color: var(--accent-blue);
         text-decoration: none;
-        transition: color 0.2s;
+        transition: color 0.3s ease;
     }
     
-    .auth-footer a:hover {
-        color: var(--accent-blue-hover);
+    .auth-link:hover {
         text-decoration: underline;
     }
 </style>

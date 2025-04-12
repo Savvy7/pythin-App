@@ -3,1026 +3,711 @@
 {% block title %}{{ game.title }}{% endblock %}
 
 {% block content %}
-<div class="game-details-container">
-    <!-- Back button -->
-    <div class="back-link">
-        <a href="{{ url_for('my_library') }}"><i class="fas fa-arrow-left"></i> Back to Library</a>
-    </div>
-
-    <!-- Game header with cover and basic info -->
-    <div class="game-header">
-        <div class="game-cover-large">
-            {% if game.cover %}
-                <img src="https:{{ game.cover|replace('t_thumb', 't_cover_big') }}" alt="{{ game.title }} cover">
-            {% else %}
-                <img src="https://placehold.co/400x600/252a31/555?text=No+Cover" alt="No cover available">
-            {% endif %}
-        </div>
-        
-        <div class="game-header-info">
-            <h1 class="game-title">{{ game.title }}</h1>
-            
-            <div class="game-meta">
-                {% if game.developer %}
-                <div class="meta-item">
-                    <span class="meta-label">Developer:</span>
-                    <span class="meta-tag">{{ game.developer }}</span>
-                </div>
-                {% endif %}
-                
-                {% if game.publisher %}
-                <div class="meta-item">
-                    <span class="meta-label">Publisher:</span>
-                    <span class="meta-tag">{{ game.publisher }}</span>
-                </div>
-                {% endif %}
-                
-                {% if game.release_date %}
-                <div class="meta-item">
-                    <span class="meta-label">Release Date:</span>
-                    <span class="meta-tag">{{ game.release_date }}</span>
-                </div>
-                {% endif %}
-                
-                {% if game.rating %}
-                <div class="meta-item">
-                    <span class="meta-label">IGDB Rating:</span>
-                    <span class="meta-value">
-                        <div class="rating-bar">
-                            <div class="rating-fill" style="width: {{ (game.rating / 100 * 100)|int }}%"></div>
-                        </div>
-                        <span class="rating-text">{{ (game.rating / 10)|round(1) }}/10</span>
-                    </span>
-                </div>
-                {% endif %}
-                
-                {% if user_data and user_data.personal_rating %}
-                <div class="meta-item">
-                    <span class="meta-label">My Rating:</span>
-                    <span class="meta-value">
-                        <div class="my-rating">
-                            {% for i in range(1, 11) %}
-                                {% if user_data.personal_rating is not none and i <= user_data.personal_rating %}
-                                <i class="fas fa-star"></i>
-                                {% else %}
-                                <i class="far fa-star"></i>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                        <span class="rating-text">{{ user_data.personal_rating }}/10</span>
-                    </span>
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="game-platforms">
-                {% if game.platforms %}
-                    {% set platforms = game.platforms %}
-                    {% if platforms is string %}
-                        {% set platforms = platforms|tojson|fromjson %}
-                    {% endif %}
-                    {% for platform in platforms|sort %}
-                        <span class="platform-badge">{{ platform }}</span>
-                    {% endfor %}
-                {% endif %}
-            </div>
-            
-            <div class="game-status-bar">
-                <div class="status-label">Status:</div>
-                <div class="status-value status-{{ user_data.status|default('backlog')|lower }}">
-                    {{ user_data.status|default('Not Started')|title }}
-                </div>
-                
-
-                <button class="btn-update" data-bs-toggle="modal" data-bs-target="#updateGameModal">
-                    <i class="fas fa-edit"></i> Update Status
-                </button>
-                
-                <button class="btn-remove" data-bs-toggle="modal" data-bs-target="#removeGameModal">
-                    <i class="fas fa-trash"></i> Remove from Library
-                </button>
-            </div>
-        </div>
+    <div class="back-navigation">
+        <a href="{{ url_for('my_library') }}" class="back-button">
+            <span>←</span> Back to Library
+        </a>
     </div>
     
-    <!-- Game info tabs -->
-    <div class="tabs-container">
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="overview">Overview</button>
-            <button class="tab-btn" data-tab="details">Details</button>
-            <button class="tab-btn" data-tab="my-notes">My Notes</button>
-        </div>
-        
-        <div class="tab-content">
-            <!-- Overview Tab -->
-            <div class="tab-pane active" id="overview">
-                {% if game.summary %}
-                <div class="summary-section">
-                    <h2>Summary</h2>
-                    <p>{{ game.summary }}</p>
+    <div class="game-detail-container">
+        <div class="game-detail-grid">
+            <!-- Left Column: Cover and User Actions -->
+            <div class="game-cover-column">
+                <div class="game-cover-large">
+                    {% if game.cover %}
+                        {% set cover_url = game.cover|replace('/t_thumb/', '/t_cover_big_2x/') %}
+                        <img src="https:{{ cover_url }}" alt="{{ game.title }} cover">
+                    {% else %}
+                        <div class="game-cover-placeholder-large">
+                            <span>{{ game.title[:2].upper() }}</span>
+                        </div>
+                    {% endif %}
                 </div>
+                
+                <div class="user-game-info">
+                    <div class="user-data-header">
+                        <div class="status-badge status-{{ user_data.status|default('Wishlist')|lower }}">
+                            {{ user_data.status|default('Wishlist') }}
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button id="edit-game-btn" class="icon-btn edit-btn" title="Edit Status & Rating">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            
+                            <form action="{{ url_for('remove_game', igdb_id=game.igdb_id) }}" method="post" class="remove-form">
+                                <button type="submit" class="icon-btn remove-btn" title="Remove from Library">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    {% if user_data and user_data.personal_rating %}
+                        <div class="user-rating">
+                            <div class="rating-stars-large">
+                                {% for i in range(1, 11) %}
+                                    <span class="star {% if i <= user_data.personal_rating %}filled{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                            <span class="rating-value-large">{{ user_data.personal_rating }}/10</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if user_data and user_data.review %}
+                        <div class="user-review-section">
+                            <h3>Your Review</h3>
+                            <div class="user-review">
+                                {{ user_data.review }}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Form to update game status - initially hidden -->
+                    <div id="update-form-container" class="update-form-container" style="display: none;">
+                        <form action="{{ url_for('update_game_status', igdb_id=game.igdb_id) }}" method="post" class="update-game-form">
+                            <div class="form-group">
+                                <label for="status">Status:</label>
+                                <select id="status" name="status" class="form-control">
+                                    <option value="Wishlist" {% if user_data and user_data.status == 'Wishlist' %}selected{% endif %}>Wishlist</option>
+                                    <option value="Playing" {% if user_data and user_data.status == 'Playing' %}selected{% endif %}>Playing</option>
+                                    <option value="Completed" {% if user_data and user_data.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    <option value="Abandoned" {% if user_data and user_data.status == 'Abandoned' %}selected{% endif %}>Abandoned</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="rating">Rating (1-10):</label>
+                                <div class="interactive-rating">
+                                    <div class="interactive-stars">
+                                        {% for i in range(1, 11) %}
+                                            <span class="star star-selectable" data-rating="{{ i }}">★</span>
+                                        {% endfor %}
+                                    </div>
+                                    <span class="rating-value-display">
+                                        <span id="rating-display">{{ user_data.personal_rating if user_data and user_data.personal_rating else '0' }}</span>/10
+                                    </span>
+                                </div>
+                                <input type="hidden" id="rating" name="rating" 
+                                       value="{{ user_data.personal_rating if user_data and user_data.personal_rating else '' }}">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="review">Your Review:</label>
+                                <textarea id="review" name="review" rows="4" class="form-control">{{ user_data.review if user_data and user_data.review else '' }}</textarea>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn-save">Save Changes</button>
+                                <button type="button" id="cancel-edit" class="btn-cancel">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Game Details -->
+            <div class="game-info-column">
+                <h1 class="game-title-large">{{ game.title }}</h1>
+                
+                {% if game.release_date %}
+                    <div class="detail-section">
+                        <h3>Release Date</h3>
+                        <p>{{ game.release_date }}</p>
+                    </div>
                 {% endif %}
                 
-                <div class="info-grid">
-                    {% if game.genres %}
-                    <div class="info-card">
-                        <h3><i class="fas fa-tag"></i> Genres</h3>
-                        <div class="tag-container">
-                            {% set genres = game.genres %}
-                            {% if genres is string %}
-                                {% set genres = genres|tojson|fromjson %}
-                            {% endif %}
-                            {% for genre in genres %}
+                {% if game.developer or game.publisher %}
+                    <div class="detail-section">
+                        <h3>Studios</h3>
+                        {% if game.developer %}
+                            <div class="detail-item">
+                                <span class="detail-label">Developer:</span>
+                                <span class="detail-value">{{ game.developer }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if game.publisher %}
+                            <div class="detail-item">
+                                <span class="detail-label">Publisher:</span>
+                                <span class="detail-value">{{ game.publisher }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                {% if game.platforms and game.platforms|length > 0 %}
+                    <div class="detail-section">
+                        <h3>Platforms</h3>
+                        <div class="tag-list">
+                            {% for platform in game.platforms %}
+                                <span class="tag">{{ platform }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if game.genres and game.genres|length > 0 %}
+                    <div class="detail-section">
+                        <h3>Genres</h3>
+                        <div class="tag-list">
+                            {% for genre in game.genres %}
                                 <span class="tag">{{ genre }}</span>
                             {% endfor %}
                         </div>
                     </div>
-                    {% endif %}
-                    
-                    {% if game.themes %}
-                    <div class="info-card">
-                        <h3><i class="fas fa-palette"></i> Themes</h3>
-                        <div class="tag-container">
-                            {% set themes = game.themes %}
-                            {% if themes is string %}
-                                {% set themes = themes|tojson|fromjson %}
-                            {% endif %}
-                            {% for theme in themes %}
+                {% endif %}
+                
+                {% if game.themes and game.themes|length > 0 %}
+                    <div class="detail-section">
+                        <h3>Themes</h3>
+                        <div class="tag-list">
+                            {% for theme in game.themes %}
                                 <span class="tag">{{ theme }}</span>
                             {% endfor %}
                         </div>
                     </div>
-                    {% endif %}
-                    
-                    {% if game.game_modes %}
-                    <div class="info-card">
-                        <h3><i class="fas fa-users"></i> Game Modes</h3>
-                        <div class="tag-container">
-                            {% set game_modes = game.game_modes %}
-                            {% if game_modes is string %}
-                                {% set game_modes = game_modes|tojson|fromjson %}
-                            {% endif %}
-                            {% for mode in game_modes %}
+                {% endif %}
+                
+                {% if game.game_modes and game.game_modes|length > 0 %}
+                    <div class="detail-section">
+                        <h3>Game Modes</h3>
+                        <div class="tag-list">
+                            {% for mode in game.game_modes %}
                                 <span class="tag">{{ mode }}</span>
                             {% endfor %}
                         </div>
                     </div>
-                    {% endif %}
-                    
-                    {% if game.franchises %}
-                    <div class="info-card">
-                        <h3><i class="fas fa-bookmark"></i> Franchises</h3>
-                        <div class="tag-container">
-                            {% set franchises = game.franchises %}
-                            {% if franchises is string %}
-                                {% set franchises = franchises|tojson|fromjson %}
-                            {% endif %}
-                            {% for franchise in franchises %}
+                {% endif %}
+                
+                {% if game.summary %}
+                    <div class="detail-section">
+                        <h3>Summary</h3>
+                        <div class="game-summary-full">
+                            {{ game.summary }}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if game.franchises and game.franchises|length > 0 %}
+                    <div class="detail-section">
+                        <h3>Franchises</h3>
+                        <div class="tag-list">
+                            {% for franchise in game.franchises %}
                                 <span class="tag">{{ franchise }}</span>
                             {% endfor %}
                         </div>
                     </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Details Tab -->
-            <div class="tab-pane" id="details">
-                <div class="details-grid">
-                    <div class="details-section">
-                        <h3>Technical Details</h3>
-                        <table class="details-table">
-                            {% if game.game_engines %}
-                            <tr>
-                                <td class="detail-label">Engine:</td>
-                                <td class="detail-value">
-                                    {% set engines = game.game_engines %}
-                                    {% if engines is string %}
-                                        {% set engines = engines|tojson|fromjson %}
-                                    {% endif %}
-                                    {{ engines|join(', ') }}
-                                </td>
-                            </tr>
-                            {% endif %}
-                            
-                            {% if game.igdb_id %}
-                            <tr>
-                                <td class="detail-label">IGDB ID:</td>
-                                <td class="detail-value">{{ game.igdb_id }}</td>
-                            </tr>
-                            {% endif %}
-                            
-                            {% if game.install_size %}
-                            <tr>
-                                <td class="detail-label">Install Size:</td>
-                                <td class="detail-value">{{ game.install_size }}</td>
-                            </tr>
-                            {% endif %}
-                            
-                            {% if game.time_to_complete %}
-                            <tr>
-                                <td class="detail-label">Time to Complete:</td>
-                                <td class="detail-value">{{ game.time_to_complete }}</td>
-                            </tr>
-                            {% endif %}
-                        </table>
-                    </div>
-                    
-                    <div class="details-section">
-                        <h3>Library Information</h3>
-                        <table class="details-table">
-                            {% if user_data %}
-                            <tr>
-                                <td class="detail-label">Added to Library:</td>
-                                <td class="detail-value">{{ user_data.date_added|default('-') }}</td>
-                            </tr>
-                            <tr>
-                                <td class="detail-label">Status:</td>
-                                <td class="detail-value status-{{ user_data.status|default('backlog')|lower }}">{{ user_data.status|default('Not Started')|title }}</td>
-                            </tr>
-                            <tr>
-                                <td class="detail-label">My Rating:</td>
-                                <td class="detail-value">{{ user_data.personal_rating|default('-') }}/10</td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="2" class="text-center">No library data available</td>
-                            </tr>
-                            {% endif %}
-                        </table>
-                    </div>
-                    
-                    {% if game.platforms %}
-                    <div class="details-section">
-                        <h3>Available Platforms</h3>
-                        <ul class="platforms-list">
-                            {% set platforms = game.platforms %}
-                            {% if platforms is string %}
-                                {% set platforms = platforms|tojson|fromjson %}
-                            {% endif %}
-                            {% for platform in platforms|sort %}
-                                <li><span class="platform-icon"></span> {{ platform }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                    
-                    {% if game.series or game.franchises %}
-                    <div class="details-section">
-                        <h3>Series & Franchises</h3>
-                        {% if game.series %}
-                        <div class="detail-group">
-                            <div class="detail-label">Series:</div>
-                            <div class="detail-value">
-                                {% set series = game.series %}
-                                {% if series is string %}
-                                    {% set series = series|tojson|fromjson %}
-                                {% endif %}
-                                {{ series|join(', ') }}
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if game.franchises %}
-                        <div class="detail-group">
-                            <div class="detail-label">Franchises:</div>
-                            <div class="detail-value">
-                                {% set franchises = game.franchises %}
-                                {% if franchises is string %}
-                                    {% set franchises = franchises|tojson|fromjson %}
-                                {% endif %}
-                                {{ franchises|join(', ') }}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- My Notes Tab -->
-            <div class="tab-pane" id="my-notes">
-                <div class="notes-container">
-                    <h4>Your Review</h4>
-
-                    {% if user_data and user_data.review %}
-                        <p>{{ user_data.review|replace('\n', '<br>')|safe }}</p>
-                         <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#updateGameModal">
-                             <i class="fas fa-edit"></i> Edit Review
-                         </button>
-                    {% else %}
-                        <p>No review added yet.</p>
-                        <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#updateGameModal">
-                            <i class="fas fa-edit"></i> Add Review
-                        </button>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Update Game Modal -->
-<div class="modal-container" id="updateGameModal">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Update {{ game.title }}</h3>
-            <button class="modal-close" data-modal-close="#updateGameModal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form action="{{ url_for('update_game_status', igdb_id=game.igdb_id) }}" method="post">
-                <div class="form-group">
-                    <label>Status</label>
-                    <select name="status" class="form-select">
-                        <option value="playing" {% if user_data and user_data.status == 'playing' %}selected{% endif %}>Playing</option>
-                        <option value="completed" {% if user_data and user_data.status == 'completed' %}selected{% endif %}>Completed</option>
-                        <option value="backlog" {% if user_data and user_data.status == 'backlog' %}selected{% endif %}>Backlog</option>
-                        <option value="abandoned" {% if user_data and user_data.status == 'abandoned' %}selected{% endif %}>Abandoned</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rating (1-10)</label>
-                    <div class="rating-input">
-                        <input type="number" name="rating" min="1" max="10" value="{{ user_data.personal_rating if user_data else '' }}" class="form-input">
-                        <div class="stars-container">
-                            {% for i in range(1, 11) %}
-                                <i class="star-rating {% if user_data and user_data.personal_rating is not none and i <= user_data.personal_rating %}fas{% else %}far{% endif %} fa-star" data-rating="{{ i }}"></i>
+                {% endif %}
+                
+                {% if game.series and game.series|length > 0 %}
+                    <div class="detail-section">
+                        <h3>Series</h3>
+                        <div class="tag-list">
+                            {% for series in game.series %}
+                                <span class="tag">{{ series }}</span>
                             {% endfor %}
                         </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Review</label>
-                    <textarea name="review" class="form-textarea" rows="5">{{ user_data.review if user_data else '' }}</textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Remove Game Modal -->
-<div class="modal-container" id="removeGameModal">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Remove Game</h3>
-            <button class="modal-close" data-modal-close="#removeGameModal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <p>Are you sure you want to remove "{{ game.title }}" from your library?</p>
-            <div class="form-actions">
-                <button class="btn-secondary" data-modal-close="#removeGameModal">Cancel</button>
-                <form action="{{ url_for('remove_game', igdb_id=game.igdb_id) }}" method="post" class="d-inline">
-                    <button type="submit" class="btn-danger">Remove</button>
-                </form>
+                {% endif %}
+                
+                {% if game.game_engines and game.game_engines|length > 0 %}
+                    <div class="detail-section">
+                        <h3>Game Engines</h3>
+                        <div class="tag-list">
+                            {% for engine in game.game_engines %}
+                                <span class="tag">{{ engine }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editBtn = document.getElementById('edit-game-btn');
+        const updateForm = document.getElementById('update-form-container');
+        const cancelBtn = document.getElementById('cancel-edit');
+        
+        editBtn.addEventListener('click', function() {
+            updateForm.style.display = 'block';
+            editBtn.style.display = 'none';
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            updateForm.style.display = 'none';
+            editBtn.style.display = 'block';
+        });
+        
+        // Interactive Star Rating System
+        const stars = document.querySelectorAll('.star-selectable');
+        const ratingInput = document.getElementById('rating');
+        const ratingDisplay = document.getElementById('rating-display');
+        
+        // Initialize stars based on current rating
+        updateStars(parseInt(ratingInput.value) || 0);
+        
+        // Add event listeners to stars
+        stars.forEach(star => {
+            // Hover effect
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.getAttribute('data-rating'));
+                highlightStars(rating);
+            });
+            
+            // Click to set rating
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.getAttribute('data-rating'));
+                ratingInput.value = rating;
+                ratingDisplay.textContent = rating;
+                updateStars(rating);
+            });
+        });
+        
+        // Mouse leave container - reset to selected rating
+        const starsContainer = document.querySelector('.interactive-stars');
+        starsContainer.addEventListener('mouseleave', function() {
+            updateStars(parseInt(ratingInput.value) || 0);
+        });
+        
+        // Function to update stars based on rating
+        function updateStars(rating) {
+            stars.forEach(star => {
+                const starRating = parseInt(star.getAttribute('data-rating'));
+                if (starRating <= rating) {
+                    star.classList.add('filled');
+                } else {
+                    star.classList.remove('filled');
+                }
+            });
+        }
+        
+        // Function to temporarily highlight stars on hover
+        function highlightStars(rating) {
+            stars.forEach(star => {
+                const starRating = parseInt(star.getAttribute('data-rating'));
+                if (starRating <= rating) {
+                    star.classList.add('filled');
+                } else {
+                    star.classList.remove('filled');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
 <style>
-    .game-details-container {
-        max-width: 1200px;
-        margin: 0 auto;
+    .back-navigation {
+        margin-bottom: 20px;
     }
     
-    .back-link {
-        margin-bottom: 1.5rem;
-    }
-    
-    .back-link a {
+    .back-button {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        color: var(--text-secondary);
+        color: var(--accent-blue);
         text-decoration: none;
-        transition: color 0.2s;
+        font-weight: 500;
+        transition: all 0.2s ease;
     }
     
-    .back-link a:hover {
-        color: var(--text-primary);
+    .back-button:hover {
+        color: var(--accent-blue-hover);
+        transform: translateX(-3px);
     }
     
-    /* Game Header */
-    .game-header {
+    .back-button span {
+        margin-right: 5px;
+    }
+    
+    .game-detail-container {
+        margin-bottom: 30px;
+    }
+    
+    .game-detail-grid {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 30px;
+    }
+    
+    .game-cover-column {
         display: flex;
-        gap: 2rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 20px;
     }
     
     .game-cover-large {
-        flex-shrink: 0;
-        width: 300px;
-        height: 450px;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-    
-    .game-cover-large img {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .game-header-info {
-        flex: 1;
-        min-width: 300px;
-    }
-    
-    .game-title {
-        font-size: 2.5rem;
-        margin-bottom: 1.5rem;
-        line-height: 1.2;
-    }
-    
-    .game-meta {
-        margin-bottom: 1.5rem;
-    }
-    
-    .meta-item {
-        display: flex;
-        margin-bottom: 0.8rem;
-    }
-    
-    .meta-label {
-        font-weight: 600;
-        min-width: 120px;
-        color: var(--text-secondary);
-    }
-    
-    .meta-value {
-        flex: 1;
-    }
-    
-    .rating-bar {
-        height: 8px;
-        width: 150px;
-        background-color: var(--sidebar-bg);
-        border-radius: 4px;
+        height: 430px;
+        border-radius: 10px;
         overflow: hidden;
-        margin-top: 0.5rem;
-        display: inline-block;
-        vertical-align: middle;
-    }
-    
-    .rating-fill {
-        height: 100%;
-        background-color: var(--accent-blue);
-    }
-    
-    .rating-text {
-        margin-left: 0.5rem;
-        vertical-align: middle;
-    }
-    
-    .my-rating {
-        display: inline-block;
-        color: var(--warning-color);
-        margin-right: 0.5rem;
-    }
-    
-    .game-platforms {
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        background-color: #0f0f0f;
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .platform-badge {
-        background-color: var(--sidebar-bg);
-        color: var(--text-secondary);
-        padding: 0.3rem 0.8rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-    
-    .meta-tag {
-        background-color: var(--sidebar-bg);
-        color: var(--text-secondary);
-        padding: 0.3rem 0.8rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        display: inline-block; /* Ensure padding and background apply correctly */
-    }
-    
-    .game-status-bar {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        background-color: var(--card-bg);
-        padding: 1rem;
-        border-radius: 8px;
-        flex-wrap: wrap;
-    }
-    
-    .status-label {
-        font-weight: 600;
-        color: var(--text-secondary);
-    }
-    
-    .status-value {
-        padding: 0.3rem 0.8rem;
-        border-radius: 4px;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    
-    .status-playing {
-        background-color: rgba(53, 191, 92, 0.2);
-        color: var(--success-color);
-    }
-    
-    .status-completed {
-        background-color: rgba(76, 201, 240, 0.2);
-        color: var(--info-color);
-    }
-    
-    .status-backlog {
-        background-color: rgba(255, 204, 41, 0.2);
-        color: var(--warning-color);
-    }
-    
-    .status-abandoned {
-        background-color: rgba(230, 57, 70, 0.2);
-        color: var(--danger-color);
-    }
-    
-    .btn-update, .btn-remove {
-        margin-left: auto;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-        font-size: 0.9rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .btn-update {
-        background-color: var(--sidebar-bg);
-        color: var(--text-primary);
-    }
-    
-    .btn-update:hover {
-        background-color: var(--accent-blue);
-        color: white;
-    }
-    
-    .btn-remove {
-        background-color: rgba(230, 57, 70, 0.1);
-        color: var(--danger-color);
-    }
-    
-    .btn-remove:hover {
-        background-color: var(--danger-color);
-        color: white;
-    }
-    
-    /* Tabs */
-    .tabs-container {
-        margin-top: 2rem;
-        background-color: var(--card-bg);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    
-    .tabs {
-        display: flex;
-        background-color: var(--sidebar-bg);
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .tab-btn {
-        padding: 1rem 1.5rem;
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.2s;
-        position: relative;
-    }
-    
-    .tab-btn:hover {
-        color: var(--text-primary);
-    }
-    
-    .tab-btn.active {
-        color: var(--accent-blue);
-        font-weight: 600;
-    }
-    
-    .tab-btn.active::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background-color: var(--accent-blue);
-    }
-    
-    .tab-content {
-        padding: 1.5rem;
-    }
-    
-    .tab-pane {
-        display: none;
-    }
-    
-    .tab-pane.active {
-        display: block;
-    }
-    
-    /* Overview Tab */
-    .summary-section {
-        margin-bottom: 2rem;
-    }
-    
-    .summary-section h2 {
-        margin-bottom: 1rem;
-        font-size: 1.5rem;
-    }
-    
-    .summary-section p {
-        line-height: 1.6;
-        color: var(--text-secondary);
-    }
-    
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .info-card {
-        background-color: var(--sidebar-bg);
-        border-radius: 8px;
-        padding: 1.2rem;
-    }
-    
-    .info-card h3 {
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .tag-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-    
-    .tag {
-        background-color: rgba(44, 92, 188, 0.1);
-        color: var(--accent-blue);
-        padding: 0.3rem 0.8rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-    }
-    
-    /* Details Tab */
-    .details-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .details-section {
-        background-color: var(--sidebar-bg);
-        border-radius: 8px;
-        padding: 1.2rem;
-    }
-    
-    .details-section h3 {
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.5rem;
-    }
-    
-    .details-table {
-        width: 100%;
-    }
-    
-    .details-table tr {
-        border-bottom: 1px solid rgba(52, 58, 64, 0.3);
-    }
-    
-    .details-table tr:last-child {
-        border-bottom: none;
-    }
-    
-    .details-table td {
-        padding: 0.8rem 0;
-    }
-    
-    .detail-label {
-        color: var(--text-secondary);
-        font-weight: 600;
-        width: 40%;
-    }
-    
-    .detail-group {
-        margin-bottom: 1rem;
-    }
-    
-    .platforms-list {
-        list-style: none;
-    }
-    
-    .platforms-list li {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(52, 58, 64, 0.3);
-        display: flex;
-        align-items: center;
-    }
-    
-    .platforms-list li:last-child {
-        border-bottom: none;
-    }
-    
-    .platform-icon {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background-color: var(--accent-blue);
-        border-radius: 50%;
-        margin-right: 0.8rem;
-    }
-    
-    /* My Notes Tab */
-    .notes-container {
-        background-color: var(--sidebar-bg);
-        border-radius: 8px;
-        padding: 1.5rem;
-    }
-    
-    .notes-container h3 {
-        margin-bottom: 1.5rem;
-        font-size: 1.2rem;
-    }
-    
-    .review-content {
-        line-height: 1.6;
-        color: var(--text-secondary);
-        white-space: pre-wrap;
-    }
-    
-    .empty-review {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-secondary);
-    }
-    
-    .empty-review p {
-        margin-bottom: 1.5rem;
-    }
-    
-    /* Star Rating */
-    .rating-input {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-    
-    .stars-container {
-        display: flex;
-        gap: 0.3rem;
-    }
-    
-    .star-rating {
-        color: var(--text-secondary);
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-    
-    .star-rating.fas {
-        color: var(--warning-color);
-    }
-    
-    /* Modal Styles (same as in my_library.html) */
-    .modal-container {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 1000;
         justify-content: center;
         align-items: center;
     }
     
-    .modal-container.active {
+    .game-cover-large img {
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+    
+    .game-cover-placeholder-large {
         display: flex;
-    }
-    
-    .modal-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-    
-    .modal-content {
-        background-color: var(--card-bg);
-        border-radius: 8px;
+        align-items: center;
+        justify-content: center;
         width: 100%;
-        max-width: 500px;
-        max-height: 90vh;
-        overflow-y: auto;
-        z-index: 1001;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        height: 100%;
+        background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+        color: var(--secondary-text);
+        font-size: 3rem;
+        font-weight: bold;
     }
     
-    .modal-header {
+    .user-game-info {
+        background-color: #1a1a1a;
+        border-radius: 10px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    
+    .status-playing {
+        background-color: rgba(0, 200, 83, 0.15);
+        color: #00c853;
+    }
+    
+    .status-completed {
+        background-color: rgba(33, 150, 243, 0.15);
+        color: #2196f3;
+    }
+    
+    .status-wishlist {
+        background-color: rgba(255, 152, 0, 0.15);
+        color: #ff9800;
+    }
+    
+    .status-abandoned {
+        background-color: rgba(244, 67, 54, 0.15);
+        color: #f44336;
+    }
+    
+    .user-rating {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 10px 0;
+    }
+    
+    .rating-stars-large {
+        display: flex;
+        gap: 3px;
+        margin-bottom: 5px;
+    }
+    
+    .star {
+        color: #555;
+        font-size: 1.2rem;
+    }
+    
+    .star.filled {
+        color: #ffca28;
+    }
+    
+    .rating-value-large {
+        color: #ffca28;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .game-info-column {
+        background-color: #1a1a1a;
+        border-radius: 10px;
+        padding: 25px;
+    }
+    
+    .game-title-large {
+        font-size: 2.2rem;
+        margin-bottom: 20px;
+        color: var(--primary-text);
+        line-height: 1.2;
+    }
+    
+    .detail-section {
+        margin-bottom: 25px;
+    }
+    
+    .detail-section h3 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        color: var(--accent-blue);
+        font-weight: 500;
+    }
+    
+    .detail-item {
+        margin-bottom: 8px;
+    }
+    
+    .detail-label {
+        color: var(--secondary-text);
+        margin-right: 8px;
+    }
+    
+    .detail-value {
+        color: var(--primary-text);
+        font-weight: 500;
+    }
+    
+    .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .tag {
+        background-color: #252525;
+        color: var(--primary-text);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+    
+    .game-summary-full {
+        line-height: 1.6;
+        color: var(--primary-text);
+        font-size: 1rem;
+    }
+    
+    .user-data-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid var(--border-color);
     }
     
-    .modal-header h3 {
-        margin: 0;
-        font-size: 1.2rem;
+    .action-buttons {
+        display: flex;
+        gap: 8px;
     }
     
-    .modal-close {
+    .icon-btn {
         background: none;
         border: none;
-        color: var(--text-secondary);
-        font-size: 1.2rem;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
     }
     
-    .modal-close:hover {
-        color: var(--text-primary);
+    .edit-btn {
+        color: var(--accent-blue);
     }
     
-    .modal-body {
-        padding: 1.5rem;
+    .edit-btn:hover {
+        background-color: rgba(33, 150, 243, 0.1);
+    }
+    
+    .remove-btn {
+        color: #f44336;
+    }
+    
+    .remove-btn:hover {
+        background-color: rgba(244, 67, 54, 0.1);
+    }
+    
+    .remove-form {
+        margin: 0;
+    }
+    
+    .user-review-section {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #333;
+    }
+    
+    .user-review-section h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        color: var(--accent-blue);
+        font-weight: 500;
+    }
+    
+    .user-review {
+        font-style: italic;
+        color: var(--primary-text);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+    
+    .btn-primary {
+        display: none; /* Hide the old button */
+    }
+    
+    .btn-danger {
+        display: none; /* Hide the old button */
+    }
+    
+    .update-form-container {
+        margin-top: 10px;
+    }
+    
+    .update-game-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
     }
     
     .form-group {
-        margin-bottom: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
     
     .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        color: var(--text-secondary);
+        color: var(--primary-text);
+        font-weight: 500;
     }
     
-    .form-select, .form-input, .form-textarea {
-        width: 100%;
-        padding: 0.7rem 1rem;
-        background-color: var(--sidebar-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        color: var(--text-primary);
+    .form-control {
+        background-color: #252525;
+        border: 1px solid #3a3a3a;
+        color: var(--primary-text);
+        padding: 10px 12px;
+        border-radius: 6px;
         font-size: 0.95rem;
-        transition: border-color 0.2s;
+        width: 100%;
     }
     
-    .form-select:focus, .form-input:focus, .form-textarea:focus {
-        outline: none;
+    .form-control:focus {
         border-color: var(--accent-blue);
+        outline: none;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
     }
     
     .form-actions {
         display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-        margin-top: 1.5rem;
+        gap: 10px;
+        margin-top: 5px;
     }
     
-    .text-center {
-        text-align: center;
+    .btn-save {
+        background-color: var(--accent-blue);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        flex: 1;
     }
     
-    /* Responsive Design */
+    .btn-save:hover {
+        background-color: var(--accent-blue-hover);
+    }
+    
+    .btn-cancel {
+        background-color: transparent;
+        color: var(--secondary-text);
+        border: 1px solid #3a3a3a;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+    }
+    
+    .btn-cancel:hover {
+        background-color: #2a2a2a;
+    }
+    
+    @media (max-width: 992px) {
+        .game-detail-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .game-cover-column {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+    }
+    
     @media (max-width: 768px) {
-        .game-header {
-            flex-direction: column;
-            align-items: center;
-        }
-        
         .game-cover-large {
-            width: 200px;
-            height: 300px;
+            height: 400px;
         }
         
-        .game-title {
+        .game-title-large {
             font-size: 1.8rem;
-            text-align: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .game-cover-large {
+            height: 350px;
         }
         
-        .game-status-bar {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: stretch;
+        .game-info-column {
+            padding: 15px;
         }
-        
-        .btn-update, .btn-remove {
-            margin-left: 0;
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .tabs {
-            flex-direction: column;
-        }
-        
-        .tab-btn {
-            width: 100%;
-            text-align: center;
-        }
+    }
+    
+    .interactive-rating {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .interactive-stars {
+        display: flex;
+        gap: 5px;
+        margin-right: 10px;
+    }
+    
+    .star-selectable {
+        cursor: pointer;
+        transition: transform 0.1s ease, color 0.2s ease;
+    }
+    
+    .star-selectable:hover {
+        transform: scale(1.2);
+    }
+    
+    .rating-value-display {
+        color: var(--primary-text);
+        font-size: 0.95rem;
     }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Tab functionality
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabPanes = document.querySelectorAll('.tab-pane');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Update active button
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show corresponding tab pane
-            const tabId = this.getAttribute('data-tab');
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-        });
-    });
-    
-    // Star rating functionality
-    const stars = document.querySelectorAll('.star-rating');
-    const ratingInput = document.querySelector('input[name="rating"]');
-    
-    stars.forEach(star => {
-        star.addEventListener('click', function() {
-            const rating = parseInt(this.getAttribute('data-rating'));
-            
-            // Update input value
-            ratingInput.value = rating;
-            
-            // Update star visuals
-            stars.forEach(s => {
-                const starRating = parseInt(s.getAttribute('data-rating'));
-                if (starRating <= rating) {
-                    s.classList.remove('far');
-                    s.classList.add('fas');
-                } else {
-                    s.classList.remove('fas');
-                    s.classList.add('far');
-                }
-            });
-        });
-    });
-    
-    // Modal functionality
-    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
-        button.addEventListener('click', function() {
-            const target = this.getAttribute('data-bs-target');
-            document.querySelector(target).classList.add('active');
-        });
-    });
-    
-    document.querySelectorAll('[data-modal-close]').forEach(button => {
-        button.addEventListener('click', function() {
-            const target = this.getAttribute('data-modal-close');
-            document.querySelector(target).classList.remove('active');
-        });
-    });
-    
-    // Close modal when clicking on overlay
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-        overlay.addEventListener('click', function() {
-            this.closest('.modal-container').classList.remove('active');
-        });
-    });
-});
-</script>
-{% endblock %}
+{% endblock %} 
