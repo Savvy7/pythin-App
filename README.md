@@ -5,7 +5,7 @@ A personal video game collection and tracking application that helps you manage 
 ![GameTracker Screenshot](https://via.placeholder.com/800x400?text=GameTracker+Screenshot)
 
 ## Features
-
+// projectpass
 - **Game Search**: Search for games using the IGDB API
 - **Personal Library**: Build and organize your game collection
 - **Game Tracking**: Track your gaming progress with status updates (Playing, Completed, Wishlist, Abandoned)
