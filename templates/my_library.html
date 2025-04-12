@@ -6,21 +6,56 @@
     <div class="library-header">
         <h1>My Game Library</h1>
         <p class="subtitle">Track and manage your gaming collection</p>
+        
+        <!-- Add search bar -->
+        <div class="library-search">
+            <div class="search-container">
+                <input type="text" id="library-search-input" placeholder="Search your library...">
+                <button id="library-search-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
     
     {% if library %}
-        <div class="filter-controls">
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-filter="all">All Games</button>
-                <button class="filter-btn" data-filter="Playing">Playing</button>
-                <button class="filter-btn" data-filter="Completed">Completed</button>
-                <button class="filter-btn" data-filter="Wishlist">Wishlist</button>
+        <div class="library-controls">
+            <!-- Status Filter Buttons -->
+            <div class="filter-controls">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All Games</button>
+                    <button class="filter-btn" data-filter="Playing">Playing</button>
+                    <button class="filter-btn" data-filter="Completed">Completed</button>
+                    <button class="filter-btn" data-filter="Wishlist">Wishlist</button>
+                    <button class="filter-btn" data-filter="Abandoned">Abandoned</button>
+                </div>
+            </div>
+            
+            <!-- Sort Options -->
+            <div class="sort-controls">
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select" class="sort-select">
+                    <option value="date-desc">Date Added (Newest First)</option>
+                    <option value="date-asc">Date Added (Oldest First)</option>
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                    <option value="rating-desc">Rating (High to Low)</option>
+                    <option value="rating-asc">Rating (Low to High)</option>
+                </select>
             </div>
         </div>
         
         <div class="game-grid">
             {% for game in library %}
-                <div class="game-card" data-status="{{ game.status|default('Wishlist') }}">
+                <div class="game-card" 
+                     data-status="{{ game.status|default('Wishlist') }}"
+                     data-title="{{ game.title }}"
+                     data-rating="{{ game.personal_rating|default(0) }}"
+                     data-date="{{ game.date_added.strftime('%Y%m%d') }}"
+                     data-search-terms="{{ game.title }} {{ game.developer|default('') }} {{ game.publisher|default('') }}">
                     <div class="game-status game-status-{{ game.status|default('Wishlist')|lower }}">
                         {{ game.status|default('Wishlist') }}
                     </div>
@@ -57,16 +92,78 @@
                         </div>
                         
                         <div class="game-actions">
-                            <a href="{{ url_for('game_details', igdb_id=game.igdb_id) }}" class="game-btn game-btn-details">
+                            <a href="{{ url_for('games.game_details', igdb_id=game.igdb_id) }}" class="game-btn game-btn-details">
                                 Details
                             </a>
-                            <form action="{{ url_for('remove_game', igdb_id=game.igdb_id) }}" method="post" class="remove-form">
-                                <button type="submit" class="game-btn game-btn-remove">Remove</button>
+                            
+                            <!-- Edit Button -->
+                            <button class="game-btn game-btn-edit" onclick="openEditPopup('edit-popup-{{ game.igdb_id }}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg>
+                                <span class="btn-text">Edit</span>
+                            </button>
+                            
+                            <!-- Remove Button -->
+                            <form action="{{ url_for('library.remove_game', igdb_id=game.igdb_id) }}" method="post" class="remove-form">
+                                <button type="submit" class="game-btn game-btn-remove" title="Remove from Library">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
                             </form>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Edit Popup for this game -->
+                <div id="edit-popup-{{ game.igdb_id }}" class="edit-popup">
+                    <div class="edit-popup-content">
+                        <div class="edit-popup-header">
+                            <h3>Edit "{{ game.title }}"</h3>
+                            <button class="close-popup" onclick="closeEditPopup('edit-popup-{{ game.igdb_id }}')">&times;</button>
+                        </div>
+                        <form action="{{ url_for('games.update_game_status_route', igdb_id=game.igdb_id) }}" method="post" class="edit-form">
+                            <div class="form-group">
+                                <label for="status-{{ game.igdb_id }}">Status:</label>
+                                <select id="status-{{ game.igdb_id }}" name="status" class="form-control">
+                                    <option value="Wishlist" {% if game.status == 'Wishlist' %}selected{% endif %}>Wishlist</option>
+                                    <option value="Playing" {% if game.status == 'Playing' %}selected{% endif %}>Playing</option>
+                                    <option value="Completed" {% if game.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    <option value="Abandoned" {% if game.status == 'Abandoned' %}selected{% endif %}>Abandoned</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="rating-{{ game.igdb_id }}">Your Rating:</label>
+                                <div class="rating-input">
+                                    <input type="range" id="rating-{{ game.igdb_id }}" name="rating" min="0" max="10" step="1" 
+                                           value="{{ game.personal_rating|default(0) }}" oninput="updateRatingDisplay(this.value, 'rating-display-{{ game.igdb_id }}')">
+                                    <span id="rating-display-{{ game.igdb_id }}" class="rating-display">{{ game.personal_rating|default(0) }}/10</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="review-{{ game.igdb_id }}">Your Review:</label>
+                                <textarea id="review-{{ game.igdb_id }}" name="review" class="form-control" rows="3">{{ game.review|default('') }}</textarea>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="popup-btn popup-btn-save">Save Changes</button>
+                                <button type="button" class="popup-btn popup-btn-cancel" onclick="closeEditPopup('edit-popup-{{ game.igdb_id }}')">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             {% endfor %}
+            
+            <!-- No Results Message -->
+            <div id="no-results-message" class="no-results-message" style="display: none;">
+                <div class="empty-icon">🔍</div>
+                <h3>No games found</h3>
+                <p>Try adjusting your search or filters</p>
+            </div>
         </div>
     {% else %}
         <div class="empty-library">
@@ -81,10 +178,18 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Filter functionality
         const filterButtons = document.querySelectorAll('.filter-btn');
+        const sortSelect = document.getElementById('sort-select');
+        const searchInput = document.getElementById('library-search-input');
+        const searchButton = document.getElementById('library-search-button');
         const gameCards = document.querySelectorAll('.game-card');
         
+        // Keep track of current filter and sort
+        let currentFilter = 'all';
+        let currentSort = 'date-desc';
+        let searchTerm = '';
+        
+        // Filter functionality
         filterButtons.forEach(button => {
             button.addEventListener('click', function() {
                 // Remove active class from all buttons
@@ -92,17 +197,119 @@
                 // Add active class to clicked button
                 this.classList.add('active');
                 
-                const filter = this.getAttribute('data-filter');
-                
-                gameCards.forEach(card => {
-                    if (filter === 'all' || card.getAttribute('data-status') === filter) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
+                currentFilter = this.getAttribute('data-filter');
+                applyFiltersAndSort();
             });
         });
+        
+        // Sort functionality
+        sortSelect.addEventListener('change', function() {
+            currentSort = this.value;
+            applyFiltersAndSort();
+        });
+        
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            searchTerm = this.value.toLowerCase().trim();
+            applyFiltersAndSort();
+        });
+        
+        searchButton.addEventListener('click', function() {
+            searchTerm = searchInput.value.toLowerCase().trim();
+            applyFiltersAndSort();
+        });
+        
+        // Apply all filters and sorting
+        function applyFiltersAndSort() {
+            // First filter the cards
+            const filteredCards = Array.from(gameCards).filter(card => {
+                // Filter by status
+                const statusMatch = currentFilter === 'all' || 
+                                    card.getAttribute('data-status') === currentFilter;
+                
+                // Filter by search term
+                const searchTerms = card.getAttribute('data-search-terms').toLowerCase();
+                const searchMatch = searchTerm === '' || searchTerms.includes(searchTerm);
+                
+                // Card is visible only if it matches both filters
+                return statusMatch && searchMatch;
+            });
+            
+            // Show/hide cards based on filters
+            gameCards.forEach(card => {
+                if (filteredCards.includes(card)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Then sort the filtered cards
+            filteredCards.sort((a, b) => {
+                switch (currentSort) {
+                    case 'date-desc':
+                        return b.getAttribute('data-date') - a.getAttribute('data-date');
+                    case 'date-asc':
+                        return a.getAttribute('data-date') - b.getAttribute('data-date');
+                    case 'title-asc':
+                        return a.getAttribute('data-title').localeCompare(b.getAttribute('data-title'));
+                    case 'title-desc':
+                        return b.getAttribute('data-title').localeCompare(a.getAttribute('data-title'));
+                    case 'rating-desc':
+                        return b.getAttribute('data-rating') - a.getAttribute('data-rating');
+                    case 'rating-asc':
+                        return a.getAttribute('data-rating') - b.getAttribute('data-rating');
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Reorder the cards in the DOM
+            const gameGrid = document.querySelector('.game-grid');
+            filteredCards.forEach(card => {
+                gameGrid.appendChild(card);
+            });
+            
+            // Show "no results" message if no games match
+            const noResultsMessage = document.getElementById('no-results-message');
+            if (filteredCards.length === 0 && noResultsMessage) {
+                noResultsMessage.style.display = 'block';
+            } else if (noResultsMessage) {
+                noResultsMessage.style.display = 'none';
+            }
+        }
+    });
+    
+    // Popup functionality
+    function openEditPopup(popupId) {
+        // Close any open popups first
+        document.querySelectorAll('.edit-popup').forEach(popup => {
+            popup.classList.remove('active');
+        });
+        
+        // Open the requested popup
+        document.getElementById(popupId).classList.add('active');
+        
+        // Add overlay to the body
+        document.body.classList.add('popup-open');
+    }
+    
+    function closeEditPopup(popupId) {
+        document.getElementById(popupId).classList.remove('active');
+        document.body.classList.remove('popup-open');
+    }
+    
+    // Update rating display as slider moves
+    function updateRatingDisplay(value, displayId) {
+        document.getElementById(displayId).textContent = value + '/10';
+    }
+    
+    // Close popup when clicking outside
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('edit-popup')) {
+            event.target.classList.remove('active');
+            document.body.classList.remove('popup-open');
+        }
     });
 </script>
 {% endblock %}
@@ -123,6 +330,115 @@
     .subtitle {
         color: var(--secondary-text);
         font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Search styling */
+    .library-search {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .search-container {
+        display: flex;
+        background-color: #252525;
+        border-radius: 30px;
+        padding: 0 5px 0 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    #library-search-input {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 12px 15px 12px 0;
+        color: var(--primary-text);
+        font-size: 1rem;
+    }
+    
+    #library-search-input:focus {
+        outline: none;
+    }
+    
+    #library-search-button {
+        background: none;
+        border: none;
+        color: var(--accent-blue);
+        padding: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.3s ease;
+    }
+    
+    #library-search-button:hover {
+        color: var(--accent-blue-hover);
+    }
+    
+    /* Library controls styling */
+    .library-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-controls {
+        margin-bottom: 0;
+    }
+    
+    .sort-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .sort-controls label {
+        color: var(--primary-text);
+        font-size: 0.9rem;
+    }
+    
+    .sort-select {
+        background-color: #252525;
+        border: 1px solid #3a3a3a;
+        color: var(--primary-text);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    
+    .sort-select:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+    }
+    
+    /* No results message styling */
+    .no-results-message {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem 2rem;
+        background-color: #1a1a1a;
+        border-radius: 10px;
+    }
+    
+    .no-results-message .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .no-results-message h3 {
+        font-size: 1.5rem;
+        color: var(--primary-text);
+        margin-bottom: 0.5rem;
+    }
+    
+    .no-results-message p {
+        color: var(--secondary-text);
     }
     
     .filter-controls {
@@ -203,7 +519,7 @@
         color: #2196f3;
     }
     
-    .game-status-wishlist {
+    .game-status-Wishlist {
         background-color: rgba(255, 152, 0, 0.2);
         color: #ff9800;
     }
@@ -316,26 +632,47 @@
     .game-btn-details {
         background-color: var(--accent-blue);
         color: white;
+        border: none;
     }
     
     .game-btn-details:hover {
         background-color: var(--accent-blue-hover);
     }
     
+    .game-btn-edit {
+        background-color: #2a2a2a;
+        color: var(--secondary-text);
+        border: 1px solid #3a3a3a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+    
+    .game-btn-edit:hover {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        border-color: #ffc107;
+    }
+    
     .game-btn-remove {
         background-color: transparent;
         color: var(--secondary-text);
-        border: 1px solid #3a3a3a;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        min-width: 36px;
     }
     
     .game-btn-remove:hover {
         background-color: rgba(244, 67, 54, 0.1);
         color: #f44336;
-        border-color: #f44336;
     }
     
     .remove-form {
-        flex: 1;
+        flex: 0 0 auto;
     }
     
     .empty-library {
@@ -382,6 +719,26 @@
         .game-cover {
             height: 270px;
         }
+        
+        .library-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-controls {
+            width: 100%;
+            order: 2; /* Move filters below sorting on mobile */
+        }
+        
+        .sort-controls {
+            width: 100%;
+            margin-bottom: 15px;
+            justify-content: space-between;
+        }
+        
+        .sort-select {
+            flex: 1;
+        }
     }
     
     @media (max-width: 480px) {
@@ -410,6 +767,203 @@
         .game-actions {
             flex-direction: column;
         }
+        
+        .search-container {
+            border-radius: 20px;
+        }
+        
+        #library-search-input {
+            font-size: 0.9rem;
+            padding: 10px 10px 10px 0;
+        }
+        
+        .btn-text {
+            display: none; /* Hide text in edit button on mobile */
+        }
+        
+        .game-btn-edit {
+            padding: 6px;
+            min-width: 36px;
+        }
+        
+        .edit-popup-content {
+            width: 95%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    }
+    
+    /* Edit Popup Styles */
+    .edit-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .edit-popup.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .edit-popup-content {
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .edit-popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background-color: #252525;
+        border-bottom: 1px solid #333;
+    }
+    
+    .edit-popup-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--primary-text);
+    }
+    
+    .close-popup {
+        background: none;
+        border: none;
+        color: var(--secondary-text);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+    
+    .close-popup:hover {
+        color: var(--primary-text);
+    }
+    
+    .edit-form {
+        padding: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--primary-text);
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        background-color: #2a2a2a;
+        border: 1px solid #3a3a3a;
+        border-radius: 4px;
+        color: var(--primary-text);
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+    }
+    
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .rating-input {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    input[type="range"] {
+        flex: 1;
+        -webkit-appearance: none;
+        height: 6px;
+        background: #3a3a3a;
+        border-radius: 3px;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent-blue);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    
+    .rating-display {
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+        min-width: 44px;
+        text-align: right;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .popup-btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+    }
+    
+    .popup-btn-save {
+        background-color: var(--accent-blue);
+        color: white;
+    }
+    
+    .popup-btn-save:hover {
+        background-color: var(--accent-blue-hover);
+    }
+    
+    .popup-btn-cancel {
+        background-color: transparent;
+        color: var(--secondary-text);
+        border: 1px solid #3a3a3a;
+    }
+    
+    .popup-btn-cancel:hover {
+        background-color: #333;
+        color: var(--primary-text);
+    }
+    
+    body.popup-open {
+        overflow: hidden;
     }
 </style>
 {% endblock %}

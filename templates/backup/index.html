@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h1>Find Your Games</h1>
+    <p class="subtitle">Search for games to add to your collection</p>
+    
+    <div class="search-container">
+        <form action="/search" method="get" class="search-form">
+            <div class="search-input-group">
+                <input type="text" name="query" placeholder="Search for games..." class="search-input" required>
+                <button type="submit" class="search-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="popular-searches">
+        <h3>Popular Searches</h3>
+        <div class="search-tags">
+            <a href="/search?query=Cyberpunk" class="search-tag">Cyberpunk 2077</a>
+            <a href="/search?query=God of War" class="search-tag">God of War</a>
+            <a href="/search?query=Zelda" class="search-tag">The Legend of Zelda</a>
+            <a href="/search?query=Minecraft" class="search-tag">Minecraft</a>
+            <a href="/search?query=FIFA" class="search-tag">FIFA</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-text);
+        text-align: center;
+    }
+    
+    .subtitle {
+        text-align: center;
+        color: var(--secondary-text);
+        margin-bottom: 2rem;
+    }
+    
+    .search-container {
+        max-width: 600px;
+        margin: 0 auto 2rem;
+    }
+    
+    .search-form {
+        width: 100%;
+    }
+    
+    .search-input-group {
+        display: flex;
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 50px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input-group:focus-within {
+        box-shadow: 0 4px 20px rgba(33, 150, 243, 0.3);
+    }
+    
+    .search-input {
+        flex: 1;
+        border: none;
+        background-color: #2a2a2a;
+        color: var(--primary-text);
+        padding: 16px 24px;
+        font-size: 1.1rem;
+        outline: none;
+        width: 100%;
+        border-radius: 50px 0 0 50px;
+    }
+    
+    .search-input::placeholder {
+        color: var(--secondary-text);
+    }
+    
+    .search-button {
+        background-color: var(--accent-blue);
+        border: none;
+        color: white;
+        padding: 0 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s ease;
+    }
+    
+    .search-button:hover {
+        background-color: var(--accent-blue-hover);
+    }
+    
+    .popular-searches {
+        text-align: center;
+        margin-top: 2rem;
+    }
+    
+    .popular-searches h3 {
+        font-size: 1.2rem;
+        color: var(--primary-text);
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+    
+    .search-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    .search-tag {
+        background-color: rgba(33, 150, 243, 0.1);
+        color: var(--accent-blue);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .search-tag:hover {
+        background-color: rgba(33, 150, 243, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    @media (max-width: 768px) {
+        .search-input {
+            font-size: 1rem;
+            padding: 14px 20px;
+        }
+        
+        .search-tag {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}

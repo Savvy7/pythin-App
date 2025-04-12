@@ -113,7 +113,7 @@ def create_user_tracked_games_table(host_name, db_name, user_name, user_password
         CREATE TABLE IF NOT EXISTS user_tracked_games (
             user_id INT NOT NULL,
             game_igdb_id INT NOT NULL,
-            status VARCHAR(20) DEFAULT 'Planned',
+            status VARCHAR(20) DEFAULT 'Wishlist',
             personal_rating INT,
             date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             
