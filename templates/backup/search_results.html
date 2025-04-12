@@ -69,7 +69,7 @@
                         {% endif %}
                         
                         <div class="game-actions">
-                            <a href="{{ url_for('library.add_game', igdb_id=game.id) }}" class="add-button">
+                            <a href="/add_game/{{ game.id }}" class="add-button">
                                 <span class="button-icon">+</span>
                                 Add to Library
                             </a>

@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}My Library{% endblock %}
+
+{% block content %}
+    <div class="library-header">
+        <h1>My Game Library</h1>
+        <p class="subtitle">Track and manage your gaming collection</p>
+    </div>
+    
+    {% if library %}
+        <div class="filter-controls">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All Games</button>
+                <button class="filter-btn" data-filter="Playing">Playing</button>
+                <button class="filter-btn" data-filter="Completed">Completed</button>
+                <button class="filter-btn" data-filter="Wishlist">Wishlist</button>
+            </div>
+        </div>
+        
+        <div class="game-grid">
+            {% for game in library %}
+                <div class="game-card" data-status="{{ game.status|default('Wishlist') }}">
+                    <div class="game-status game-status-{{ game.status|default('Wishlist')|lower }}">
+                        {{ game.status|default('Wishlist') }}
+                    </div>
+                    
+                    <div class="game-cover">
+                        {% if game.cover %}
+                            {% set cover_url = game.cover|replace('/t_thumb/', '/t_cover_big/') %}
+                            <img src="https:{{ cover_url }}" alt="{{ game.title }} cover">
+                        {% else %}
+                            <div class="game-cover-placeholder">
+                                <span>{{ game.title[:2].upper() }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="game-info">
+                        <h3 class="game-title">{{ game.title }}</h3>
+                        
+                        {% if game.personal_rating %}
+                            <div class="rating-container">
+                                <div class="rating-stars">
+                                    {% for i in range(1, 11) %}
+                                        <span class="star {% if i <= game.personal_rating %}filled{% endif %}">★</span>
+                                    {% endfor %}
+                                </div>
+                                <span class="rating-value">{{ game.personal_rating }}/10</span>
+                            </div>
+                        {% else %}
+                            <div class="rating-placeholder">Not rated yet</div>
+                        {% endif %}
+                        
+                        <div class="game-meta">
+                            <span class="game-date">Added: {{ game.date_added.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        
+                        <div class="game-actions">
+                            <a href="{{ url_for('game_details', igdb_id=game.igdb_id) }}" class="game-btn game-btn-details">
+                                Details
+                            </a>
+                            <form action="{{ url_for('remove_game', igdb_id=game.igdb_id) }}" method="post" class="remove-form">
+                                <button type="submit" class="game-btn game-btn-remove">Remove</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-library">
+            <div class="empty-icon">🎮</div>
+            <h2>Your library is empty</h2>
+            <p>Search for games to add them to your collection!</p>
+            <a href="{{ url_for('index') }}" class="btn-primary">Search Games</a>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const gameCards = document.querySelectorAll('.game-card');
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                const filter = this.getAttribute('data-filter');
+                
+                gameCards.forEach(card => {
+                    if (filter === 'all' || card.getAttribute('data-status') === filter) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .library-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-text);
+    }
+    
+    .subtitle {
+        color: var(--secondary-text);
+        font-size: 1.1rem;
+    }
+    
+    .filter-controls {
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        background-color: #2a2a2a;
+        border: 1px solid #3a3a3a;
+        color: var(--secondary-text);
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-btn:hover {
+        background-color: #333;
+        color: var(--primary-text);
+    }
+    
+    .filter-btn.active {
+        background-color: var(--accent-blue);
+        border-color: var(--accent-blue);
+        color: white;
+    }
+    
+    .game-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 25px;
+    }
+    
+    .game-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        background-color: #1a1a1a;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: 100%;
+    }
+    
+    .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .game-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        z-index: 1;
+    }
+    
+    .game-status-playing {
+        background-color: rgba(0, 200, 83, 0.2);
+        color: #00c853;
+    }
+    
+    .game-status-completed {
+        background-color: rgba(33, 150, 243, 0.2);
+        color: #2196f3;
+    }
+    
+    .game-status-Wishlist {
+        background-color: rgba(255, 152, 0, 0.2);
+        color: #ff9800;
+    }
+    
+    .game-cover {
+        height: 320px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #0f0f0f;
+    }
+    
+    .game-cover img {
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+    
+    .game-card:hover .game-cover img {
+        transform: scale(1.05);
+    }
+    
+    .game-cover-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+        color: var(--secondary-text);
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .game-info {
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 auto;
+    }
+    
+    .game-title {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        color: var(--primary-text);
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .rating-container {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .rating-stars {
+        display: flex;
+        margin-right: 8px;
+    }
+    
+    .star {
+        color: #555;
+        font-size: 0.9rem;
+    }
+    
+    .star.filled {
+        color: #ffca28;
+    }
+    
+    .rating-value {
+        color: var(--secondary-text);
+        font-size: 0.85rem;
+    }
+    
+    .rating-placeholder {
+        color: var(--secondary-text);
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+    }
+    
+    .game-meta {
+        margin-bottom: 10px;
+        color: var(--secondary-text);
+        font-size: 0.85rem;
+    }
+    
+    .game-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .game-btn {
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        flex: 1;
+    }
+    
+    .game-btn-details {
+        background-color: var(--accent-blue);
+        color: white;
+    }
+    
+    .game-btn-details:hover {
+        background-color: var(--accent-blue-hover);
+    }
+    
+    .game-btn-remove {
+        background-color: transparent;
+        color: var(--secondary-text);
+        border: 1px solid #3a3a3a;
+    }
+    
+    .game-btn-remove:hover {
+        background-color: rgba(244, 67, 54, 0.1);
+        color: #f44336;
+        border-color: #f44336;
+    }
+    
+    .remove-form {
+        flex: 1;
+    }
+    
+    .empty-library {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-library h2 {
+        font-size: 1.8rem;
+        color: var(--primary-text);
+        margin-bottom: 1rem;
+    }
+    
+    .empty-library p {
+        color: var(--secondary-text);
+        margin-bottom: 2rem;
+    }
+    
+    .btn-primary {
+        display: inline-block;
+        background-color: var(--accent-blue);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--accent-blue-hover);
+    }
+    
+    @media (max-width: 768px) {
+        .game-grid {
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+        
+        .game-cover {
+            height: 270px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .game-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+        
+        .game-cover {
+            height: 220px;
+        }
+        
+        .filter-buttons {
+            justify-content: flex-start;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .game-info {
+            padding: 10px;
+        }
+        
+        .game-title {
+            font-size: 0.95rem;
+        }
+        
+        .game-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}

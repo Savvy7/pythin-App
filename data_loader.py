@@ -249,6 +249,7 @@ def load_game_data_to_db(host_name, db_name, user_name, user_password, game_data
         print(f"Error: '{e}'")
     finally:
         if connection is not None and connection.is_connected():
+            cursor = connection.cursor()
             cursor.close()
             connection.close()
             print("MySQL connection is closed")
