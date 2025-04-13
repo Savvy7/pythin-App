@@ -7,8 +7,9 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     if request.method == 'POST':
         username = request.form['username']
-        email = request.form['email']
+        email = request.form.get('email') # Use .get() to handle missing email
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
         
         # Basic validation
         error = None
@@ -16,11 +17,13 @@ def register():
             error = 'Username is required.'
         elif not password:
             error = 'Password is required.'
-        elif not email:
-            error = 'Email is required.'
+        elif password != confirm_password:
+            error = 'Passwords do not match.'
+        # Removed email required check
 
         if error is None:
-            success, error = register_user(username, email, password)
+            # Pass email (which might be None)
+            success, error = register_user(username, email, password) 
             
             if success:
                 flash('Registration successful! Please log in.', 'success')

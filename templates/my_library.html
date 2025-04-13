@@ -29,7 +29,7 @@
                     <button class="filter-btn active" data-filter="all">All Games</button>
                     <button class="filter-btn" data-filter="Playing">Playing</button>
                     <button class="filter-btn" data-filter="Completed">Completed</button>
-                    <button class="filter-btn" data-filter="Wishlist">Wishlist</button>
+                    <button class="filter-btn" data-filter="Planning">Planning</button>
                     <button class="filter-btn" data-filter="Abandoned">Abandoned</button>
                 </div>
             </div>
@@ -51,13 +51,13 @@
         <div class="game-grid">
             {% for game in library %}
                 <div class="game-card" 
-                     data-status="{{ game.status|default('Wishlist') }}"
+                     data-status="{{ game.status|default('Planning') }}"
                      data-title="{{ game.title }}"
                      data-rating="{{ game.personal_rating|default(0) }}"
                      data-date="{{ game.date_added.strftime('%Y%m%d') }}"
                      data-search-terms="{{ game.title }} {{ game.developer|default('') }} {{ game.publisher|default('') }}">
-                    <div class="game-status game-status-{{ game.status|default('Wishlist')|lower }}">
-                        {{ game.status|default('Wishlist') }}
+                    <div class="game-status game-status-{{ game.status|default('Planning')|lower }}">
+                        {{ game.status|default('Planning') }}
                     </div>
                     
                     <div class="game-cover">
@@ -128,7 +128,7 @@
                             <div class="form-group">
                                 <label for="status-{{ game.igdb_id }}">Status:</label>
                                 <select id="status-{{ game.igdb_id }}" name="status" class="form-control">
-                                    <option value="Wishlist" {% if game.status == 'Wishlist' %}selected{% endif %}>Wishlist</option>
+                                    <option value="Planning" {% if game.status == 'Planning' %}selected{% endif %}>Planning</option>
                                     <option value="Playing" {% if game.status == 'Playing' %}selected{% endif %}>Playing</option>
                                     <option value="Completed" {% if game.status == 'Completed' %}selected{% endif %}>Completed</option>
                                     <option value="Abandoned" {% if game.status == 'Abandoned' %}selected{% endif %}>Abandoned</option>
@@ -519,7 +519,7 @@
         color: #2196f3;
     }
     
-    .game-status-Wishlist {
+    .game-status-planning {
         background-color: rgba(255, 152, 0, 0.2);
         color: #ff9800;
     }

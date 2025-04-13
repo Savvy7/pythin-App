@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from app.models.game import search_local_games, get_all_games, get_game_details
-from app.models.game import get_user_game_data, update_game_status, get_user_library_game_ids
+from app.models.game import search_local_games, get_all_games, get_game_details, get_user_game_data, update_game_status, get_user_library_game_ids
 from app.services.igdb_service import search_games, add_game_to_database
 from app.utils.decorators import login_required
 
@@ -37,23 +36,91 @@ def search():
     """Search for games in both local DB and IGDB."""
     query = request.args.get('query')
     if not query:
-        return render_template('search_results.html', games=[], logged_in=('user_id' in session))
+        return render_template('search_results.html', 
+                               games=[], 
+                               genres=[], 
+                               platforms=[], 
+                               user_library_ids=[],
+                               search_query=query,
+                               logged_in=('user_id' in session))
     
-    # First, search in the local database
-    local_results = search_local_games(query)
-    if local_results:
-        print(f"Found {len(local_results)} games in local database for query: '{query}'")
-        return render_template('search_results.html', games=local_results, logged_in=('user_id' in session))
-        
-    # If no local results, then query the IGDB API
-    print(f"No local results found. Searching IGDB API for games with query: '{query}'")
-    game_data = search_games(query)
+    # Search local database first
+    game_results = search_local_games(query) # Returns IGDB-like format
     
-    if not game_data:
+    # If no local results, query IGDB API
+    if not game_results:
+        print(f"No local results found. Searching IGDB API for games with query: '{query}'")
+        game_results = search_games(query) # Returns IGDB-like format
+    
+    # Handle no results found
+    if not game_results:
         flash(f"No games found for '{query}'", "info")
-        return render_template('search_results.html', games=[], logged_in=('user_id' in session))
+        return render_template('search_results.html', 
+                               games=[], 
+                               genres=[], 
+                               platforms=[], 
+                               user_library_ids=[],
+                               search_query=query,
+                               logged_in=('user_id' in session))
+
+    # Prepare data for the template (similar to all_games)
+    games_for_template = []
+    all_genres = set()
+    all_platforms = set()
+    
+    for game in game_results:
+        # Extract data needed for the template (including filter data)
+        genres = [genre.get('name') for genre in game.get('genres', []) if genre.get('name')]
+        platforms = [platform.get('name') for platform in game.get('platforms', []) if platform.get('name')] # Assuming search_games now returns platforms
         
-    return render_template('search_results.html', games=game_data, logged_in=('user_id' in session))
+        # Handle release dates which could be a list or a dict
+        release_date = None
+        release_dates = game.get('release_dates')
+        if release_dates:
+            if isinstance(release_dates, dict) and 'human' in release_dates:
+                release_date = release_dates['human']
+            elif isinstance(release_dates, list) and len(release_dates) > 0:
+                # Get the first release date that has a 'human' field
+                for date_entry in release_dates:
+                    if isinstance(date_entry, dict) and 'human' in date_entry:
+                        release_date = date_entry['human']
+                        break
+        
+        formatted_game = {
+            'id': game.get('id'), # Used for add_game link
+            'igdb_id': game.get('id'), # Consistency, might be useful
+            'title': game.get('name'),
+            'cover': game.get('cover', {}).get('url') if game.get('cover') else None,
+            'release_date': release_date,
+            'summary': game.get('summary'),
+            'genres': genres,
+            'platforms': platforms,
+            'rating': game.get('rating'), # Assuming search_games returns these
+            'weighted_rating': game.get('total_rating'), # Assuming search_games returns these
+             # Fields needed for all_games style rendering
+            'cover_url': game.get('cover', {}).get('url') if game.get('cover') else None, 
+            'genre_names': genres,
+            'name': game.get('name'), # Needed for backward compatibility with search_results.html
+        }
+        games_for_template.append(formatted_game)
+        
+        for genre in genres:
+            all_genres.add(genre)
+        for platform in platforms:
+            all_platforms.add(platform) # Assuming platforms are returned
+
+    # Get user's library game IDs
+    user_library_ids = []
+    if 'user_id' in session:
+        user_library_ids = get_user_library_game_ids(session['user_id'])
+
+    return render_template('search_results.html', 
+                          games=games_for_template, 
+                          genres=sorted(all_genres),
+                          platforms=sorted(all_platforms), # Pass platforms
+                          user_library_ids=user_library_ids,
+                          search_query=query,
+                          logged_in=('user_id' in session))
 
 @games_bp.route('/search_local')
 def search_local():
@@ -71,23 +138,40 @@ def search_local():
     
     for game in games_igdb_format:
         # Convert from IGDB API format to the format expected by all_games.html
+        genres = [genre.get('name') for genre in game.get('genres', []) if genre.get('name')]
+        # Assuming platforms are not reliably in local search results formatted this way
+        platforms = [] 
+        
+        # Handle release dates which could be a list or a dict
+        release_date = None
+        release_dates = game.get('release_dates')
+        if release_dates:
+            if isinstance(release_dates, dict) and 'human' in release_dates:
+                release_date = release_dates['human']
+            elif isinstance(release_dates, list) and len(release_dates) > 0:
+                # Get the first release date that has a 'human' field
+                for date_entry in release_dates:
+                    if isinstance(date_entry, dict) and 'human' in date_entry:
+                        release_date = date_entry['human']
+                        break
+        
         formatted_game = {
             'id': None,  # We don't use this, it's the internal DB ID
-            'igdb_id': game['id'],
-            'title': game['name'],
-            'cover': game['cover']['url'] if game['cover'] and game['cover']['url'] else None,
-            'release_date': game['release_dates']['human'] if 'release_dates' in game and game['release_dates'] else None,
-            'summary': game['summary'],
-            'genres': [genre['name'] for genre in game['genres']] if game['genres'] else [],
-            'platforms': [],  # Not included in basic search results
-            'rating': None,
-            'weighted_rating': None
+            'igdb_id': game.get('id'),
+            'title': game.get('name'),
+            'cover': game.get('cover', {}).get('url') if game.get('cover') else None,
+            'release_date': release_date,
+            'summary': game.get('summary'),
+            'genres': genres,
+            'platforms': platforms, # Keep platforms empty for local search?
+            'rating': None, # Local search might not have rating
+            'weighted_rating': None # Local search might not have weighted_rating
         }
         games.append(formatted_game)
     
     # Get unique list of genres and platforms for filters
     all_genres = set()
-    all_platforms = set()
+    all_platforms = set() # Keep platforms empty for local search?
     for game in games:
         for genre in game['genres']:
             all_genres.add(genre)
@@ -97,10 +181,11 @@ def search_local():
     if 'user_id' in session:
         user_library_ids = get_user_library_game_ids(session['user_id'])
     
+    # Renders all_games.html, which expects this data
     return render_template('all_games.html',
                           games=games,
                           genres=sorted(all_genres),
-                          platforms=sorted(all_platforms),
+                          platforms=sorted(all_platforms), # Pass empty platforms
                           user_library_ids=user_library_ids,
                           search_query=query,
                           logged_in=('user_id' in session))

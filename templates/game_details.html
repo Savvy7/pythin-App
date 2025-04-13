@@ -26,8 +26,8 @@
                 
                 <div class="user-game-info">
                     <div class="user-data-header">
-                        <div class="status-badge status-{{ user_data.status|default('Wishlist')|lower }}">
-                            {{ user_data.status|default('Wishlist') }}
+                        <div class="status-badge status-{{ user_data.status|default('Planning')|lower }}">
+                            {{ user_data.status|default('Planning') }}
                         </div>
                         
                         <div class="action-buttons">
@@ -75,7 +75,7 @@
                             <div class="form-group">
                                 <label for="status">Status:</label>
                                 <select id="status" name="status" class="form-control">
-                                    <option value="Wishlist" {% if user_data and user_data.status == 'Wishlist' %}selected{% endif %}>Wishlist</option>
+                                    <option value="Planning" {% if user_data and user_data.status == 'Planning' %}selected{% endif %}>Planning</option>
                                     <option value="Playing" {% if user_data and user_data.status == 'Playing' %}selected{% endif %}>Playing</option>
                                     <option value="Completed" {% if user_data and user_data.status == 'Completed' %}selected{% endif %}>Completed</option>
                                     <option value="Abandoned" {% if user_data and user_data.status == 'Abandoned' %}selected{% endif %}>Abandoned</option>
@@ -407,7 +407,7 @@
         color: #2196f3;
     }
     
-    .status-Wishlist {
+    .status-planning {
         background-color: rgba(255, 152, 0, 0.15);
         color: #ff9800;
     }

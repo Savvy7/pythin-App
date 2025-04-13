@@ -337,7 +337,7 @@ def add_game(igdb_id):
         user_id = session['user_id']
         
         try:
-            # Insert with default status ('Wishlist')
+            # Insert with default status ('Planning')
             cursor.execute(
                 "INSERT INTO user_tracked_games (user_id, game_igdb_id) VALUES (%s, %s)",
                 (user_id, igdb_id)

@@ -103,7 +103,7 @@ DROP TABLE IF EXISTS `user_tracked_games`;
 CREATE TABLE `user_tracked_games` (
   `user_id` int NOT NULL,
   `game_igdb_id` int NOT NULL,
-  `status` varchar(20) DEFAULT 'Wishlist',
+  `status` varchar(20) DEFAULT 'Planning',
   `personal_rating` int DEFAULT NULL,
   `date_added` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `review` text,
@@ -121,7 +121,7 @@ CREATE TABLE `user_tracked_games` (
 
 LOCK TABLES `user_tracked_games` WRITE;
 /*!40000 ALTER TABLE `user_tracked_games` DISABLE KEYS */;
-INSERT INTO `user_tracked_games` VALUES (1,127,'Wishlist',3,'2025-04-12 07:29:29','None'),(1,14593,'Wishlist',0,'2025-04-12 06:41:09',NULL),(1,26758,'Wishlist',0,'2025-04-12 07:00:22',NULL),(1,28337,'Wishlist',0,'2025-04-12 06:40:45',NULL),(1,115289,'Wishlist',0,'2025-04-12 06:41:14',NULL),(1,119388,'Wishlist',0,'2025-04-12 06:59:58','None'),(1,128097,'Wishlist',0,'2025-04-12 06:59:15',NULL),(1,138858,'Wishlist',0,'2025-04-12 06:41:33',NULL),(1,287846,'Wishlist',0,'2025-04-12 06:41:37',NULL);
+INSERT INTO `user_tracked_games` VALUES (1,127,'Planning',3,'2025-04-12 07:29:29','None'),(1,14593,'Planning',0,'2025-04-12 06:41:09',NULL),(1,26758,'Planning',0,'2025-04-12 07:00:22',NULL),(1,28337,'Planning',0,'2025-04-12 06:40:45',NULL),(1,115289,'Planning',0,'2025-04-12 06:41:14',NULL),(1,119388,'Planning',0,'2025-04-12 06:59:58','None'),(1,128097,'Planning',0,'2025-04-12 06:59:15',NULL),(1,138858,'Planning',0,'2025-04-12 06:41:33',NULL),(1,287846,'Planning',0,'2025-04-12 06:41:37',NULL);
 /*!40000 ALTER TABLE `user_tracked_games` ENABLE KEYS */;
 UNLOCK TABLES;
 

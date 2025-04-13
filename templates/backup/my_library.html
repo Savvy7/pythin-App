@@ -14,15 +14,15 @@
                 <button class="filter-btn active" data-filter="all">All Games</button>
                 <button class="filter-btn" data-filter="Playing">Playing</button>
                 <button class="filter-btn" data-filter="Completed">Completed</button>
-                <button class="filter-btn" data-filter="Wishlist">Wishlist</button>
+                <button class="filter-btn" data-filter="Planning">Planning</button>
             </div>
         </div>
         
         <div class="game-grid">
             {% for game in library %}
-                <div class="game-card" data-status="{{ game.status|default('Wishlist') }}">
-                    <div class="game-status game-status-{{ game.status|default('Wishlist')|lower }}">
-                        {{ game.status|default('Wishlist') }}
+                <div class="game-card" data-status="{{ game.status|default('Planning') }}">
+                    <div class="game-status game-status-{{ game.status|default('Planning')|lower }}">
+                        {{ game.status|default('Planning') }}
                     </div>
                     
                     <div class="game-cover">
@@ -203,7 +203,7 @@
         color: #2196f3;
     }
     
-    .game-status-Wishlist {
+    .game-status-Planning {
         background-color: rgba(255, 152, 0, 0.2);
         color: #ff9800;
     }
