@@ -63,12 +63,13 @@ def add_game_to_db(igdb_id, client_id, access_token, host_name=DB_HOST, db_name=
     }
     
     # Query to get detailed game data based on ID
+    # Only fetch main games (category=0), not DLCs or expansions
     query = f'''
     fields id, name, total_rating, total_rating_count, cover.url, release_dates.human,
-        platforms.name, genres.name, summary, rating,
+        platforms.name, genres.name, summary, rating, category,
         involved_companies.developer, involved_companies.publisher, involved_companies.company.name,
         game_modes.name, collections.name, franchises.name, themes.name, game_engines.name;
-    where id = {igdb_id};
+    where id = {igdb_id} & (category = 0 | category = null);
     '''
     
     url = 'https://api.igdb.com/v4/games'

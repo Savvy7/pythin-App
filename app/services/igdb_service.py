@@ -35,13 +35,25 @@ def search_games(query):
                 game['cover_url'] = None
                 
             # Get release date from nested object
-            if 'release_dates' in game and game['release_dates'] and 'human' in game['release_dates']:
+            if 'release_dates' in game and game['release_dates'] and isinstance(game['release_dates'], list):
+                # Handle release_dates as list
+                for date in game['release_dates']:
+                    if isinstance(date, dict) and 'human' in date:
+                        game['release_date'] = date['human']
+                        break
+                else:
+                    game['release_date'] = None
+            elif 'release_dates' in game and game['release_dates'] and isinstance(game['release_dates'], dict) and 'human' in game['release_dates']:
+                # Handle release_dates as dict
                 game['release_date'] = game['release_dates']['human']
             else:
                 game['release_date'] = None
                 
             # Extract genre names
             game['genre_names'] = [genre['name'] for genre in game.get('genres', [])]
+            
+            # Extract platform names (now included in the API response)
+            game['platform_names'] = [platform['name'] for platform in game.get('platforms', [])]
     
     return game_data
 

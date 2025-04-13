@@ -65,9 +65,14 @@ def get_igdb_games(query, client_id=IGDB_CLIENT_ID, access_token=None):
     }
     
     # Query to get basic game info
+    # Category values in IGDB: 
+    # 0 = main game, 1 = DLC, 2 = expansion, 3 = bundle, 4 = standalone_expansion, 
+    # 5 = mod, 6 = episode, 7 = season, 8 = remake, 9 = remaster, 10 = expanded_game, 
+    # 11 = port, 12 = fork, 13 = pack, 14 = update
     query_str = f'''
-    fields id, name, cover.url, release_dates.human, summary, genres.name;
+    fields id, name, cover.url, release_dates.human, summary, genres.name, platforms.name, rating, total_rating, category;
     search "{query}";
+    where category = 0 & parent_game = null & version_parent = null;
     limit 10;
     '''
     
