@@ -110,6 +110,16 @@
             width: auto;
         }
         
+        .tagline {
+            margin-left: 12px;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: var(--secondary-text);
+            font-weight: 500;
+            font-style: italic;
+            display: block;
+        }
+        
         .nav-links {
             display: flex;
             gap: 20px;
@@ -146,6 +156,10 @@
                 width: 100%;
                 justify-content: space-between;
             }
+            
+            .tagline {
+                display: none; /* Hide tagline on mobile */
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -154,6 +168,7 @@
     <nav>
         <a href="{{ url_for('index') }}" class="logo">
             <img src="{{ url_for('static', filename='logo.svg') }}" alt="Backtrackr" height="60">
+            <span class="tagline">Never lose track of the games you love.</span>
         </a>
         <div class="nav-links">
             <a href="{{ url_for('games.all_games') }}">Games</a>

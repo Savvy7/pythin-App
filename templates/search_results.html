@@ -146,7 +146,7 @@
                             
                             {% if game.id not in user_library_ids %}
                                 <a href="{{ url_for('library.add_game', igdb_id=game.id) }}" class="game-btn game-btn-add">
-                                    Add to Library
+                                    Add
                                 </a>
                             {% else %}
                                 <span class="game-btn game-btn-in-library">In Library</span>
@@ -525,6 +525,11 @@
         transition: all 0.3s ease;
         text-decoration: none;
         flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        white-space: nowrap;
     }
     
     .game-btn-details {
@@ -540,6 +545,12 @@
         background-color: transparent;
         color: #4caf50;
         border: 1px solid #4caf50;
+    }
+    
+    .game-btn-add::before {
+        content: "+";
+        margin-right: 4px;
+        font-weight: bold;
     }
     
     .game-btn-add:hover {
