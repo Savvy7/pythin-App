@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Tracker - {% block title %}{% endblock %}</title>
+    <title>Backtrackr - {% block title %}{% endblock %}</title>
+    
+    <!-- Favicon links for various browsers and devices -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
+    
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
     <style>
         :root {
@@ -94,6 +101,13 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 40px;
+            width: auto;
         }
         
         .nav-links {
@@ -138,7 +152,9 @@
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('index') }}" class="logo">Game Tracker</a>
+        <a href="{{ url_for('index') }}" class="logo">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="Backtrackr" height="60">
+        </a>
         <div class="nav-links">
             <a href="{{ url_for('games.all_games') }}">Games</a>
             {% if logged_in %}

@@ -1,0 +1,10 @@
+<svg width="400" height="100" viewBox="0 10 400 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .text { fill: #00C2FF; font-family: 'Segoe UI', sans-serif; font-weight: 600; font-size: 64px; }
+    .icon { fill: #00C2FF; }
+  </style>
+  <!-- Icon: Looping arrow to the left -->
+  <path class="icon" d="M30 60c0-16 12-28 28-28h16v-12l20 18-20 18v-12h-16c-8 0-14 6-14 16s6 16 14 16h12v8h-12c-16 0-28-12-28-28z"/>
+  <!-- Text: Backtrackr -->
+  <text class="text" x="100" y="76">Backtrackr</text>
+</svg> 
