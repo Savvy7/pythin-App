@@ -205,8 +205,19 @@ def game_details(igdb_id):
     game_data = get_game_details(igdb_id)
     
     if not game_data:
-        flash("Game not found in database", "warning")
-        return redirect(url_for('games.all_games'))
+        # Game not found in local database, fetch from IGDB and add to local database
+        game_data = add_game_to_database(igdb_id)
+        
+        if not game_data:
+            flash("Game not found or could not be retrieved from IGDB", "warning")
+            return redirect(url_for('games.all_games'))
+        
+        # The game was added to database - now retrieve it in the expected format
+        game_data = get_game_details(igdb_id)
+        
+        if not game_data:
+            flash("Game was added but could not be retrieved from local database", "warning")
+            return redirect(url_for('games.all_games'))
     
     # Get user-specific data for this game
     user_id = session['user_id']
