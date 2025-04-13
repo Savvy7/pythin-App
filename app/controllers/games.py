@@ -71,20 +71,28 @@ def search():
     for game in game_results:
         # Extract data needed for the template (including filter data)
         genres = [genre.get('name') for genre in game.get('genres', []) if genre.get('name')]
-        platforms = [platform.get('name') for platform in game.get('platforms', []) if platform.get('name')] # Assuming search_games now returns platforms
+        
+        # Get platforms from either the platform_names field or by extracting from platforms
+        if hasattr(game, 'platform_names') and game.platform_names:
+            platforms = game.platform_names
+        else:
+            platforms = [platform.get('name') for platform in game.get('platforms', []) if platform.get('name')]
         
         # Handle release dates which could be a list or a dict
         release_date = None
-        release_dates = game.get('release_dates')
-        if release_dates:
-            if isinstance(release_dates, dict) and 'human' in release_dates:
-                release_date = release_dates['human']
-            elif isinstance(release_dates, list) and len(release_dates) > 0:
-                # Get the first release date that has a 'human' field
-                for date_entry in release_dates:
-                    if isinstance(date_entry, dict) and 'human' in date_entry:
-                        release_date = date_entry['human']
-                        break
+        if hasattr(game, 'release_date') and game.release_date:
+            release_date = game.release_date
+        else:
+            release_dates = game.get('release_dates')
+            if release_dates:
+                if isinstance(release_dates, dict) and 'human' in release_dates:
+                    release_date = release_dates['human']
+                elif isinstance(release_dates, list) and len(release_dates) > 0:
+                    # Get the first release date that has a 'human' field
+                    for date_entry in release_dates:
+                        if isinstance(date_entry, dict) and 'human' in date_entry:
+                            release_date = date_entry['human']
+                            break
         
         formatted_game = {
             'id': game.get('id'), # Used for add_game link
@@ -107,7 +115,7 @@ def search():
         for genre in genres:
             all_genres.add(genre)
         for platform in platforms:
-            all_platforms.add(platform) # Assuming platforms are returned
+            all_platforms.add(platform)
 
     # Get user's library game IDs
     user_library_ids = []
