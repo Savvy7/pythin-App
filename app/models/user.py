@@ -49,15 +49,25 @@ def register_user(username, email, password):
     try:
         # Hash password before storing
         hashed_password = generate_password_hash(password)
+        
+        # Handle potentially None email
+        email_value = email if email else None 
+        
         cursor.execute(
             "INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)",
-            (username, email, hashed_password),
+            (username, email_value, hashed_password),
         )
         conn.commit()
         success = True
     except Error as e:
         if "Duplicate entry" in str(e):
-            error = f"User {username} or email {email} is already registered."
+            # Check which field caused the duplicate error
+            if f"'{username}'" in str(e) and "for key 'users.username'" in str(e):
+                error = f"Username \"{username}\" is already registered."
+            elif email_value and f"'{email_value}'" in str(e) and "for key 'users.email'" in str(e):
+                error = f"Email \"{email_value}\" is already registered."
+            else:
+                 error = "Username or email is already registered." # Fallback message
         else:
             error = f"Database error during registration: {e}"
     finally:

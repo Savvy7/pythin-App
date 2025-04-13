@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS user_tracked_games (
     user_id INT NOT NULL,
     game_igdb_id INT NOT NULL,
-    status VARCHAR(20) DEFAULT 'Wishlist', -- e.g., 'Playing', 'Completed', 'Wishlist', 'Dropped'
+    status VARCHAR(20) DEFAULT 'Planning', -- e.g., 'Playing', 'Completed', 'Planning', 'Dropped'
     personal_rating INT, -- User's personal rating (e.g., 1-10), nullable
     date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     

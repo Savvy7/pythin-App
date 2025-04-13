@@ -7,9 +7,9 @@
         <h1>Game Collection</h1>
         <p class="subtitle">Browse our entire collection of games</p>
         
-        <form action="{{ url_for('games.search_local') }}" method="get" class="global-search-form">
+        <form action="{{ url_for('games.search') }}" method="get" class="global-search-form">
             <div class="search-wrapper">
-                <input type="text" name="query" placeholder="Search our game database..." 
+                <input type="text" name="query" placeholder="Search games..." 
                        value="{{ search_query|default('') }}" required>
                 <button type="submit">Search</button>
             </div>
@@ -18,8 +18,8 @@
     
     <div class="filter-sort-controls">
         <div class="control-group search-group">
-            <label for="search-games">Search Games:</label>
-            <input type="text" id="search-games" class="filter-control" placeholder="Search by title...">
+            <label for="search-games">Filter Games:</label>
+            <input type="text" id="search-games" class="filter-control" placeholder="Filter displayed games by title...">
         </div>
         
         <div class="control-group">

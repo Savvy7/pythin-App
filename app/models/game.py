@@ -203,7 +203,7 @@ def add_game_to_user_library(user_id, igdb_id):
     try:
         cursor = connection.cursor()
         
-        # Insert with default status ('Wishlist')
+        # Insert with default status ('Planning')
         cursor.execute(
             "INSERT INTO user_tracked_games (user_id, game_igdb_id) VALUES (%s, %s)",
             (user_id, igdb_id)

@@ -8,7 +8,7 @@ A personal video game collection and tracking application that helps you manage 
 // projectpass
 - **Game Search**: Search for games using the IGDB API
 - **Personal Library**: Build and organize your game collection
-- **Game Tracking**: Track your gaming progress with status updates (Playing, Completed, Wishlist, Abandoned)
+- **Game Tracking**: Track your gaming progress with status updates (Playing, Completed, Planning, Abandoned)
 - **Rating System**: Rate games on a scale of 1-10
 - **Game Details**: View comprehensive information about games including release dates, developers, platforms
 - **Review System**: Write and save personal reviews for games you've played
