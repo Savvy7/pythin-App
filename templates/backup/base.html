@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Tracker - {% block title %}{% endblock %}</title>
+    <title>Backtrackr - {% block title %}{% endblock %}</title>
+    
+    <!-- Favicon links for various browsers and devices -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
+    
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
     <style>
         :root {
@@ -79,6 +86,43 @@
             border-left: 4px solid var(--info-text);
         }
         
+        .image-note {
+            background-color: #202030;
+            border-left: 4px solid #9575cd;
+            color: #d1c4e9;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .image-note-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .image-note-content::before {
+            content: "ℹ️";
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .close-note {
+            background: none;
+            border: none;
+            color: #9575cd;
+            cursor: pointer;
+            font-size: 1.7rem;
+            padding: 0 0 0 10px;
+        }
+        
+        .close-note:hover {
+            color: #d1c4e9;
+        }
+        
         nav {
             background-color: var(--secondary-bg);
             border-radius: 8px;
@@ -94,6 +138,23 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+        
+        .tagline {
+            margin-left: 12px;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: var(--secondary-text);
+            font-weight: 500;
+            font-style: italic;
+            display: block;
         }
         
         .nav-links {
@@ -132,13 +193,20 @@
                 width: 100%;
                 justify-content: space-between;
             }
+            
+            .tagline {
+                display: none; /* Hide tagline on mobile */
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('index') }}" class="logo">Game Tracker</a>
+        <a href="{{ url_for('index') }}" class="logo">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="Backtrackr" height="60">
+            <span class="tagline">Never lose track of the games you love.</span>
+        </a>
         <div class="nav-links">
             <a href="{{ url_for('games.all_games') }}">Games</a>
             {% if logged_in %}
@@ -160,12 +228,34 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
+            
+            <div id="imageNote" class="image-note" style="display: none;">
+                <div class="image-note-content">
+                    If covers aren't loading or search isn't working, your firewall may be blocking our external catalog. Try a VPN.
+                </div>
+                <button class="close-note" onclick="dismissNote()">×</button>
+            </div>
         </div>
 
         <div class="content">
             {% block content %}{% endblock %}
         </div>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if the note has been dismissed before
+            const noteIsDismissed = localStorage.getItem('imageNoteDismissed');
+            if (!noteIsDismissed) {
+                document.getElementById('imageNote').style.display = 'flex';
+            }
+        });
+        
+        function dismissNote() {
+            document.getElementById('imageNote').style.display = 'none';
+            localStorage.setItem('imageNoteDismissed', 'true');
+        }
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

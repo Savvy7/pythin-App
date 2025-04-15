@@ -223,10 +223,27 @@ def game_details(igdb_id):
     user_id = session['user_id']
     user_data = get_user_game_data(user_id, igdb_id)
     
+    # Set default values for template variables
+    in_library = False
+    library_status = 'Planning'
+    personal_rating = 0
+    review = ''
+    
+    # If user data exists, populate the variables
+    if user_data:
+        in_library = True
+        library_status = user_data.get('status', 'Planning')
+        personal_rating = user_data.get('personal_rating', 0)
+        review = user_data.get('review', '')
+    
     # Pass game data and user data to the template
     return render_template('game_details.html', 
                           game=game_data, 
                           user_data=user_data,
+                          in_library=in_library,
+                          library_status=library_status,
+                          personal_rating=personal_rating,
+                          review=review,
                           logged_in=True)
 
 @games_bp.route('/update_status/<int:igdb_id>', methods=['POST'])
@@ -245,4 +262,13 @@ def update_game_status_route(igdb_id):
     else:
         flash("No changes were made or game not found.", "warning")
     
-    return redirect(url_for('games.game_details', igdb_id=igdb_id))
+    # Check if a return_to parameter is provided or if referrer indicates the library page
+    return_to = request.form.get('return_to')
+    referrer = request.referrer
+    
+    if return_to == 'library':
+        return redirect(url_for('library.my_library'))
+    elif referrer and 'library' in referrer:
+        return redirect(url_for('library.my_library'))
+    else:
+        return redirect(url_for('games.game_details', igdb_id=igdb_id))

@@ -16,8 +16,8 @@ def my_library():
 
 @library_bp.route('/add/<int:igdb_id>')
 @login_required
-def add_game(igdb_id):
-    """Add a game to the user's library."""
+def add_game_get(igdb_id):
+    """Add a game to the user's library (via GET)."""
     # First ensure game exists in local database
     game = add_game_to_database(igdb_id)
     
@@ -55,3 +55,43 @@ def remove_game(igdb_id):
         flash("Game not found in your library.", "warning")
     
     return redirect(url_for('library.my_library'))
+
+@library_bp.route('/add', methods=['POST'])
+@login_required
+def add_game():
+    """Add a game to the user's library (via POST)."""
+    igdb_id = request.form.get('igdb_id')
+    
+    if not igdb_id:
+        flash("Invalid game ID.", "danger")
+        return redirect(url_for('games.all_games'))
+    
+    # Convert to integer
+    try:
+        igdb_id = int(igdb_id)
+    except ValueError:
+        flash("Invalid game ID format.", "danger")
+        return redirect(url_for('games.all_games'))
+    
+    # First ensure game exists in local database
+    game = add_game_to_database(igdb_id)
+    
+    if not game:
+        flash("Failed to add game. Could not retrieve game data from IGDB.", "danger")
+        return redirect(url_for('games.all_games'))
+    
+    # Now add to user's tracked list
+    user_id = session['user_id']
+    success = add_game_to_user_library(user_id, igdb_id)
+    
+    if success:
+        flash(f"Game '{game['name']}' added to your library!", "success")
+    else:
+        flash(f"Game '{game['name']}' is already in your library or couldn't be added.", "info")
+
+    # Redirect based on the referrer
+    referrer = request.referrer
+    if referrer and 'search' in referrer:
+        return redirect(url_for('games.search'))
+    else:
+        return redirect(url_for('library.my_library'))

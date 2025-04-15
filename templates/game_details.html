@@ -3,304 +3,362 @@
 {% block title %}{{ game.title }}{% endblock %}
 
 {% block content %}
-    <div class="back-navigation">
-        <a href="{{ url_for('library.my_library') }}" class="back-button">
-            <span>←</span> Back to Library
+<div class="game-details-container">
+    <!-- Back button -->
+    <div class="navigation-controls">
+        <a href="javascript:history.back()" class="back-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Back</span>
         </a>
+        
+        {% if in_library %}
+        <form id="remove-form" action="{{ url_for('library.remove_game', igdb_id=game.igdb_id) }}" method="POST" class="remove-form">
+            <button type="button" class="remove-button" title="Remove from Library" onclick="confirmRemove()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+            </button>
+        </form>
+        {% endif %}
     </div>
-    
-    <div class="game-detail-container">
-        <div class="game-detail-grid">
-            <!-- Left Column: Cover and User Actions -->
-            <div class="game-cover-column">
-                <div class="game-cover-large">
-                    {% if game.cover %}
-                        {% set cover_url = game.cover|replace('/t_thumb/', '/t_cover_big_2x/') %}
-                        <img src="https:{{ cover_url }}" alt="{{ game.title }} cover">
-                    {% else %}
-                        <div class="game-cover-placeholder-large">
-                            <span>{{ game.title[:2].upper() }}</span>
-                        </div>
+
+    <!-- Main Game Details -->
+    <div class="game-main-details">
+        <!-- Cover Image -->
+        <div class="game-cover">
+            {% if game.cover %}
+                {% set cover_url = game.cover|replace('/t_thumb/', '/t_cover_big/') %}
+                <img src="https:{{ cover_url }}" alt="{{ game.title }} cover">
+            {% else %}
+                <div class="cover-placeholder">
+                    <span>{{ game.title[:2].upper() }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Title and Main Info -->
+        <div class="game-info">
+            <h1 class="game-title">{{ game.title }}</h1>
+            
+            {% if game.genres %}
+            <div class="game-genres">
+                {% for genre in game.genres %}
+                <span class="genre-tag">{{ genre }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="game-meta">
+                {% if game.release_date %}
+                <div class="meta-item">
+                    <span class="meta-label">Release Date:</span>
+                    <span class="meta-value">
+                        {% if game.release_date is string %}
+                            {{ game.release_date }}
+                        {% else %}
+                            {{ game.release_date.strftime('%b %d, %Y') }}
+                        {% endif %}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if game.developer or game.publisher %}
+                <div class="meta-item">
+                    {% if game.developer %}
+                    <span class="meta-label">Developer:</span>
+                    <span class="meta-value">{{ game.developer }}</span>
+                    {% endif %}
+                    {% if game.developer and game.publisher %} | {% endif %}
+                    {% if game.publisher %}
+                    <span class="meta-label">Publisher:</span>
+                    <span class="meta-value">{{ game.publisher }}</span>
                     {% endif %}
                 </div>
+                {% endif %}
                 
-                <div class="user-game-info">
-                    <div class="user-data-header">
-                        <div class="status-badge status-{{ user_data.status|default('Planning')|lower }}">
-                            {{ user_data.status|default('Planning') }}
+                {% if game.platforms %}
+                <div class="meta-item">
+                    <span class="meta-label">Platforms:</span>
+                    <span class="meta-value">{{ game.platforms|join(', ') }}</span>
+                </div>
+                {% endif %}
+                
+                {% if game.rating %}
+                <div class="meta-item">
+                    <span class="meta-label">IGDB Rating:</span>
+                    <div class="rating-display">
+                        <div class="rating-bar">
+                            <div class="rating-fill" {% if game.rating %}style="width: {{ (game.rating/100) * 100 }}%;"{% endif %}></div>
                         </div>
-                        
-                        <div class="action-buttons">
-                            <button id="edit-game-btn" class="icon-btn edit-btn" title="Edit Status & Rating">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
-                            </button>
-                            
-                            <form action="{{ url_for('library.remove_game', igdb_id=game.igdb_id) }}" method="post" class="remove-form">
-                                <button type="submit" class="icon-btn remove-btn" title="Remove from Library">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                    </svg>
-                                </button>
-                            </form>
-                        </div>
+                        <span class="rating-value">{{ (game.rating/100) * 10 | round(1) }}/10</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- User Actions -->
+            <div class="user-actions">
+                {% if in_library %}
+                    <div class="in-library-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>In Your Library</span>
                     </div>
                     
-                    {% if user_data and user_data.personal_rating %}
-                        <div class="user-rating">
-                            <div class="rating-stars-large">
-                                {% for i in range(1, 11) %}
-                                    <span class="star {% if i <= user_data.personal_rating %}filled{% endif %}">★</span>
-                                {% endfor %}
-                            </div>
-                            <span class="rating-value-large">{{ user_data.personal_rating }}/10</span>
+                    <!-- Game Status Update Form -->
+                    <div class="user-game-details">
+                        <div class="user-game-header">
+                            <h3>Your Game Details</h3>
+                            <button id="edit-details-btn" class="edit-details-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg>
+                                Edit
+                            </button>
                         </div>
-                    {% endif %}
-                    
-                    {% if user_data and user_data.review %}
-                        <div class="user-review-section">
-                            <h3>Your Review</h3>
-                            <div class="user-review">
-                                {{ user_data.review }}
+                        
+                        <div class="user-game-content">
+                            <div class="user-game-status">
+                                <div class="status-pill status-{{ library_status|lower }}">{{ library_status }}</div>
                             </div>
+                            
+                            <div class="user-game-rating">
+                                <div class="rating-label">Your Rating</div>
+                                <div class="rating-stars" title="{{ personal_rating|default(0) }}/10">
+                                    {% set rating_value = personal_rating|default(0)|int %}
+                                    {% for i in range(1, 11) %}
+                                        {% if i <= rating_value %}
+                                            <span class="star filled">★</span>
+                                        {% else %}
+                                            <span class="star">☆</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="rating-number">{{ rating_value }}/10</span>
+                                </div>
+                            </div>
+                            
+                            {% if review %}
+                            <div class="user-game-review">
+                                <div class="review-label">Your Review</div>
+                                <div class="review-content">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="quote-icon">
+                                        <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+                                        <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path>
+                                    </svg>
+                                    <p>{{ review }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                    
-                    <!-- Form to update game status - initially hidden -->
-                    <div id="update-form-container" class="update-form-container" style="display: none;">
-                        <form action="{{ url_for('games.update_game_status_route', igdb_id=game.igdb_id) }}" method="post" class="update-game-form">
+                        
+                        <!-- Hidden form for editing -->
+                        <form id="status-form" action="{{ url_for('games.update_game_status_route', igdb_id=game.igdb_id) }}" method="post" class="status-form" style="display: none;">
                             <div class="form-group">
                                 <label for="status">Status:</label>
                                 <select id="status" name="status" class="form-control">
-                                    <option value="Planning" {% if user_data and user_data.status == 'Planning' %}selected{% endif %}>Planning</option>
-                                    <option value="Playing" {% if user_data and user_data.status == 'Playing' %}selected{% endif %}>Playing</option>
-                                    <option value="Completed" {% if user_data and user_data.status == 'Completed' %}selected{% endif %}>Completed</option>
-                                    <option value="Abandoned" {% if user_data and user_data.status == 'Abandoned' %}selected{% endif %}>Abandoned</option>
+                                    <option value="Planning" {% if library_status == 'Planning' %}selected{% endif %}>Planning</option>
+                                    <option value="Playing" {% if library_status == 'Playing' %}selected{% endif %}>Playing</option>
+                                    <option value="Completed" {% if library_status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    <option value="Abandoned" {% if library_status == 'Abandoned' %}selected{% endif %}>Abandoned</option>
                                 </select>
                             </div>
                             
                             <div class="form-group">
-                                <label for="rating">Rating (1-10):</label>
-                                <div class="interactive-rating">
-                                    <div class="interactive-stars">
-                                        {% for i in range(1, 11) %}
-                                            <span class="star star-selectable" data-rating="{{ i }}">★</span>
-                                        {% endfor %}
-                                    </div>
-                                    <span class="rating-value-display">
-                                        <span id="rating-display">{{ user_data.personal_rating if user_data and user_data.personal_rating else '0' }}</span>/10
-                                    </span>
+                                <label for="rating">Your Rating:</label>
+                                <div class="user-rating-input">
+                                    <input type="range" id="rating" name="rating" min="0" max="10" step="1" 
+                                           value="{{ personal_rating or 0 }}" oninput="updateRatingDisplay(this.value)">
+                                    <span id="rating-display" class="user-rating-display">{{ personal_rating or 0 }}/10</span>
                                 </div>
-                                <input type="hidden" id="rating" name="rating" 
-                                       value="{{ user_data.personal_rating if user_data and user_data.personal_rating else '' }}">
                             </div>
                             
                             <div class="form-group">
                                 <label for="review">Your Review:</label>
-                                <textarea id="review" name="review" rows="4" class="form-control">{{ user_data.review if user_data and user_data.review else '' }}</textarea>
+                                <textarea id="review" name="review" class="form-control" rows="3">{{ review or '' }}</textarea>
                             </div>
                             
                             <div class="form-actions">
                                 <button type="submit" class="btn-save">Save Changes</button>
-                                <button type="button" id="cancel-edit" class="btn-cancel">Cancel</button>
+                                <button type="button" class="btn-cancel" id="cancel-edit-btn">Cancel</button>
                             </div>
                         </form>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Right Column: Game Details -->
-            <div class="game-info-column">
-                <h1 class="game-title-large">{{ game.title }}</h1>
-                
-                {% if game.release_date %}
-                    <div class="detail-section">
-                        <h3>Release Date</h3>
-                        <p>{{ game.release_date }}</p>
-                    </div>
-                {% endif %}
-                
-                {% if game.developer or game.publisher %}
-                    <div class="detail-section">
-                        <h3>Studios</h3>
-                        {% if game.developer %}
-                            <div class="detail-item">
-                                <span class="detail-label">Developer:</span>
-                                <span class="detail-value">{{ game.developer }}</span>
-                            </div>
-                        {% endif %}
-                        
-                        {% if game.publisher %}
-                            <div class="detail-item">
-                                <span class="detail-label">Publisher:</span>
-                                <span class="detail-value">{{ game.publisher }}</span>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endif %}
-                
-                {% if game.platforms and game.platforms|length > 0 %}
-                    <div class="detail-section">
-                        <h3>Platforms</h3>
-                        <div class="tag-list">
-                            {% for platform in game.platforms %}
-                                <span class="tag">{{ platform }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-                
-                {% if game.genres and game.genres|length > 0 %}
-                    <div class="detail-section">
-                        <h3>Genres</h3>
-                        <div class="tag-list">
-                            {% for genre in game.genres %}
-                                <span class="tag">{{ genre }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-                
-                {% if game.themes and game.themes|length > 0 %}
-                    <div class="detail-section">
-                        <h3>Themes</h3>
-                        <div class="tag-list">
-                            {% for theme in game.themes %}
-                                <span class="tag">{{ theme }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-                
-                {% if game.game_modes and game.game_modes|length > 0 %}
-                    <div class="detail-section">
-                        <h3>Game Modes</h3>
-                        <div class="tag-list">
-                            {% for mode in game.game_modes %}
-                                <span class="tag">{{ mode }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-                
-                {% if game.summary %}
-                    <div class="detail-section">
-                        <h3>Summary</h3>
-                        <div class="game-summary-full">
-                            {{ game.summary }}
-                        </div>
-                    </div>
-                {% endif %}
-                
-                {% if game.franchises and game.franchises|length > 0 %}
-                    <div class="detail-section">
-                        <h3>Franchises</h3>
-                        <div class="tag-list">
-                            {% for franchise in game.franchises %}
-                                <span class="tag">{{ franchise }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-                
-                {% if game.series and game.series|length > 0 %}
-                    <div class="detail-section">
-                        <h3>Series</h3>
-                        <div class="tag-list">
-                            {% for series in game.series %}
-                                <span class="tag">{{ series }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-                
-                {% if game.game_engines and game.game_engines|length > 0 %}
-                    <div class="detail-section">
-                        <h3>Game Engines</h3>
-                        <div class="tag-list">
-                            {% for engine in game.game_engines %}
-                                <span class="tag">{{ engine }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
+                {% else %}
+                    <form action="{{ url_for('library.add_game') }}" method="post">
+                        <input type="hidden" name="igdb_id" value="{{ game.igdb_id }}">
+                        <input type="hidden" name="title" value="{{ game.title }}">
+                        <input type="hidden" name="cover" value="{{ game.cover or '' }}">
+                        <button type="submit" class="btn-add-to-library">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Add to Library
+                        </button>
+                    </form>
                 {% endif %}
             </div>
         </div>
     </div>
+    
+    <!-- Game Details Tabs -->
+    <div class="game-details-tabs">
+        <div class="tabs-header">
+            <button class="tab-btn active" data-tab="summary">Summary</button>
+            {% if game.screenshots %}
+            <button class="tab-btn" data-tab="screenshots">Screenshots</button>
+            {% endif %}
+            {% if game.videos %}
+            <button class="tab-btn" data-tab="videos">Videos</button>
+            {% endif %}
+            {% if similar_games %}
+            <button class="tab-btn" data-tab="similar">Similar Games</button>
+            {% endif %}
+        </div>
+        
+        <div class="tabs-content">
+            <div id="summary" class="tab-pane active">
+                {% if game.summary %}
+                <div class="game-summary">
+                    <h2>Summary</h2>
+                    <p>{{ game.summary }}</p>
+                </div>
+                {% else %}
+                <div class="no-content">
+                    <p>No summary available for this game.</p>
+                </div>
+                {% endif %}
+                
+                {% if game.storyline %}
+                <div class="game-storyline">
+                    <h2>Storyline</h2>
+                    <p>{{ game.storyline }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if game.screenshots %}
+            <div id="screenshots" class="tab-pane">
+                <h2>Screenshots</h2>
+                <div class="screenshots-grid">
+                    {% for screenshot in game.screenshots %}
+                    <div class="screenshot-item">
+                        <img src="https:{{ screenshot|replace('/t_thumb/', '/t_screenshot_big/') }}" alt="Screenshot of {{ game.title }}" loading="lazy">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if game.videos %}
+            <div id="videos" class="tab-pane">
+                <h2>Videos</h2>
+                <div class="videos-grid">
+                    {% for video in game.videos %}
+                    <div class="video-item">
+                        <iframe 
+                            width="100%" 
+                            height="315" 
+                            src="https://www.youtube.com/embed/{{ video }}" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if similar_games %}
+            <div id="similar" class="tab-pane">
+                <h2>Similar Games</h2>
+                <div class="similar-games-grid">
+                    {% for similar_game in similar_games %}
+                    <a href="{{ url_for('games.game_details', igdb_id=similar_game.id) }}" class="similar-game-card">
+                        <div class="similar-game-cover">
+                            {% if similar_game.cover %}
+                            <img src="https:{{ similar_game.cover|replace('/t_thumb/', '/t_cover_big/') }}" alt="{{ similar_game.name }} cover" loading="lazy">
+                            {% else %}
+                            <div class="cover-placeholder">
+                                <span>{{ similar_game.name[:2].upper() }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="similar-game-info">
+                            <h3>{{ similar_game.name }}</h3>
+                            {% if similar_game.release_dates and similar_game.release_dates[0].y %}
+                            <span class="similar-game-year">({{ similar_game.release_dates[0].y }})</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // Move confirmRemove outside the DOMContentLoaded event
+    function confirmRemove() {
+        if (confirm("Are you sure you want to remove this game from your library?")) {
+            document.getElementById('remove-form').submit();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        const editBtn = document.getElementById('edit-game-btn');
-        const updateForm = document.getElementById('update-form-container');
-        const cancelBtn = document.getElementById('cancel-edit');
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
         
-        editBtn.addEventListener('click', function() {
-            updateForm.style.display = 'block';
-            editBtn.style.display = 'none';
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Hide all tab panes
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+                // Show the selected tab pane
+                const targetTab = this.getAttribute('data-tab');
+                document.getElementById(targetTab).classList.add('active');
+            });
         });
         
-        cancelBtn.addEventListener('click', function() {
-            updateForm.style.display = 'none';
-            editBtn.style.display = 'block';
-        });
+        // Function to update rating display
+        window.updateRatingDisplay = function(value) {
+            document.getElementById('rating-display').textContent = value + '/10';
+        };
         
-        // Interactive Star Rating System
-        const stars = document.querySelectorAll('.star-selectable');
-        const ratingInput = document.getElementById('rating');
-        const ratingDisplay = document.getElementById('rating-display');
+        // Edit user game details
+        const editBtn = document.getElementById('edit-details-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const statusForm = document.getElementById('status-form');
+        const userGameContent = document.querySelector('.user-game-content');
         
-        // Initialize stars based on current rating
-        updateStars(parseInt(ratingInput.value) || 0);
-        
-        // Add event listeners to stars
-        stars.forEach(star => {
-            // Hover effect
-            star.addEventListener('mouseenter', function() {
-                const rating = parseInt(this.getAttribute('data-rating'));
-                highlightStars(rating);
+        if (editBtn && cancelEditBtn && statusForm && userGameContent) {
+            editBtn.addEventListener('click', function() {
+                userGameContent.style.display = 'none';
+                statusForm.style.display = 'block';
+                editBtn.style.display = 'none';
             });
             
-            // Click to set rating
-            star.addEventListener('click', function() {
-                const rating = parseInt(this.getAttribute('data-rating'));
-                ratingInput.value = rating;
-                ratingDisplay.textContent = rating;
-                updateStars(rating);
-            });
-        });
-        
-        // Mouse leave container - reset to selected rating
-        const starsContainer = document.querySelector('.interactive-stars');
-        starsContainer.addEventListener('mouseleave', function() {
-            updateStars(parseInt(ratingInput.value) || 0);
-        });
-        
-        // Function to update stars based on rating
-        function updateStars(rating) {
-            stars.forEach(star => {
-                const starRating = parseInt(star.getAttribute('data-rating'));
-                if (starRating <= rating) {
-                    star.classList.add('filled');
-                } else {
-                    star.classList.remove('filled');
-                }
-            });
-        }
-        
-        // Function to temporarily highlight stars on hover
-        function highlightStars(rating) {
-            stars.forEach(star => {
-                const starRating = parseInt(star.getAttribute('data-rating'));
-                if (starRating <= rating) {
-                    star.classList.add('filled');
-                } else {
-                    star.classList.remove('filled');
-                }
+            cancelEditBtn.addEventListener('click', function() {
+                userGameContent.style.display = 'block';
+                statusForm.style.display = 'none';
+                editBtn.style.display = 'inline-flex';
             });
         }
     });
@@ -309,305 +367,378 @@
 
 {% block extra_css %}
 <style>
-    .back-navigation {
-        margin-bottom: 20px;
+    /* Main container styling */
+    .game-details-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    /* Back button and navigation controls */
+    .navigation-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
     }
     
     .back-button {
         display: inline-flex;
         align-items: center;
-        color: var(--accent-blue);
+        color: var(--secondary-text);
         text-decoration: none;
+        transition: color 0.3s ease;
         font-weight: 500;
-        transition: all 0.2s ease;
+    }
+    
+    .back-button svg {
+        margin-right: 8px;
+        transition: transform 0.3s ease;
     }
     
     .back-button:hover {
-        color: var(--accent-blue-hover);
-        transform: translateX(-3px);
+        color: var(--primary-text);
     }
     
-    .back-button span {
-        margin-right: 5px;
+    .back-button:hover svg {
+        transform: translateX(-4px);
     }
     
-    .game-detail-container {
-        margin-bottom: 30px;
+    .remove-form {
+        position: relative;
+        margin-top: 5px; /* Move button down slightly */
     }
     
-    .game-detail-grid {
+    .remove-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background-color: rgba(244, 67, 54, 0.1);
+        color: #f44336;
+        border-radius: 4px; /* Square corners instead of circle */
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .remove-button:hover {
+        background-color: rgba(244, 67, 54, 0.2);
+        transform: scale(1.1);
+    }
+    
+    /* Main game details section */
+    .game-main-details {
         display: grid;
         grid-template-columns: 300px 1fr;
-        gap: 30px;
+        gap: 40px;
+        margin-bottom: 40px;
     }
     
-    .game-cover-column {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .game-cover-large {
+    /* Game cover */
+    .game-cover {
+        position: relative;
         width: 100%;
-        height: 430px;
-        border-radius: 10px;
+        height: 420px;
         overflow: hidden;
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
-        background-color: #0f0f0f;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
     
-    .game-cover-large img {
-        width: auto;
-        height: 100%;
-        max-width: 100%;
-        object-fit: contain;
-    }
-    
-    .game-cover-placeholder-large {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .game-cover img {
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+        object-fit: cover;
+    }
+    
+    .cover-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #1a1a1a, #333);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: var(--secondary-text);
         font-size: 3rem;
         font-weight: bold;
     }
     
-    .user-game-info {
-        background-color: #1a1a1a;
-        border-radius: 10px;
-        padding: 20px;
+    /* Game info section */
+    .game-info {
         display: flex;
         flex-direction: column;
-        gap: 15px;
     }
     
-    .status-badge {
+    .game-title {
+        font-size: 2.5rem;
+        margin: 0 0 15px 0;
+        line-height: 1.2;
+    }
+    
+    /* Genres */
+    .game-genres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .genre-tag {
+        background-color: rgba(0, 0, 0, 0.4);
+        color: var(--secondary-text);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    /* Game metadata */
+    .game-meta {
+        margin-bottom: 25px;
+    }
+    
+    .meta-item {
+        margin-bottom: 12px;
+        color: var(--secondary-text);
+        font-size: 1rem;
+    }
+    
+    .meta-label {
+        font-weight: 600;
+        color: var(--secondary-text);
+        margin-right: 5px;
+    }
+    
+    .meta-value {
+        color: var(--primary-text);
+    }
+    
+    /* Rating display */
+    .rating-display {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 5px;
+    }
+    
+    .rating-bar {
+        position: relative;
+        width: 150px;
+        height: 6px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .rating-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        background-color: var(--accent-blue);
+        border-radius: 3px;
+    }
+    
+    .rating-value {
+        font-weight: 600;
+        color: var(--primary-text);
+    }
+    
+    /* User actions section */
+    .user-actions {
+        margin-top: auto;
+    }
+    
+    .in-library-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--primary-text);
+        background-color: rgba(0, 200, 83, 0.1);
+        padding: 8px 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-weight: 500;
+    }
+    
+    .in-library-badge svg {
+        color: #00c853;
+    }
+    
+    /* User Game Details styling */
+    .user-game-details {
+        background-color: var(--secondary-bg);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .user-game-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-bottom: 1px solid #333;
+    }
+    
+    .user-game-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--primary-text);
+    }
+    
+    .edit-details-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--primary-text);
+        border: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .edit-details-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .user-game-content {
+        padding: 20px;
+    }
+    
+    .user-game-status {
+        margin-bottom: 20px;
+    }
+    
+    .status-pill {
         display: inline-block;
         padding: 6px 12px;
         border-radius: 20px;
         font-size: 0.9rem;
         font-weight: 600;
         text-transform: uppercase;
-        text-align: center;
+    }
+    
+    .status-planning {
+        background-color: rgba(255, 152, 0, 0.2);
+        color: #ff9800;
     }
     
     .status-playing {
-        background-color: rgba(0, 200, 83, 0.15);
+        background-color: rgba(0, 200, 83, 0.2);
         color: #00c853;
     }
     
     .status-completed {
-        background-color: rgba(33, 150, 243, 0.15);
-        color: #2196f3;
-    }
-    
-    .status-planning {
-        background-color: rgba(255, 152, 0, 0.15);
-        color: #ff9800;
+        background-color: rgba(0, 113, 235, 0.2);
+        color: var(--accent-blue);
     }
     
     .status-abandoned {
-        background-color: rgba(244, 67, 54, 0.15);
+        background-color: rgba(244, 67, 54, 0.2);
         color: #f44336;
     }
     
-    .user-rating {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin: 10px 0;
+    .user-game-rating {
+        margin-bottom: 20px;
     }
     
-    .rating-stars-large {
+    .rating-label, .review-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--secondary-text);
+    }
+    
+    .rating-stars {
         display: flex;
-        gap: 3px;
-        margin-bottom: 5px;
+        align-items: center;
     }
     
     .star {
         color: #555;
         font-size: 1.2rem;
+        margin-right: 2px;
     }
     
     .star.filled {
-        color: #ffca28;
+        color: #ffc107;
     }
     
-    .rating-value-large {
-        color: #ffca28;
-        font-weight: 600;
-        font-size: 1rem;
-    }
-    
-    .game-info-column {
-        background-color: #1a1a1a;
-        border-radius: 10px;
-        padding: 25px;
-    }
-    
-    .game-title-large {
-        font-size: 2.2rem;
-        margin-bottom: 20px;
-        color: var(--primary-text);
-        line-height: 1.2;
-    }
-    
-    .detail-section {
-        margin-bottom: 25px;
-    }
-    
-    .detail-section h3 {
-        font-size: 1.2rem;
-        margin-bottom: 10px;
-        color: var(--accent-blue);
-        font-weight: 500;
-    }
-    
-    .detail-item {
-        margin-bottom: 8px;
-    }
-    
-    .detail-label {
+    .rating-number {
+        margin-left: 10px;
+        font-size: 0.9rem;
         color: var(--secondary-text);
-        margin-right: 8px;
     }
     
-    .detail-value {
-        color: var(--primary-text);
-        font-weight: 500;
+    .user-game-review {
+        margin-bottom: 20px;
     }
     
-    .tag-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+    .review-content {
+        position: relative;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        padding: 20px 20px 20px 40px;
     }
     
-    .tag {
-        background-color: #252525;
-        color: var(--primary-text);
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-    }
-    
-    .game-summary-full {
-        line-height: 1.6;
-        color: var(--primary-text);
-        font-size: 1rem;
-    }
-    
-    .user-data-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-    }
-    
-    .icon-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 6px;
-        border-radius: 4px;
-        transition: all 0.2s ease;
-    }
-    
-    .edit-btn {
-        color: var(--accent-blue);
-    }
-    
-    .edit-btn:hover {
-        background-color: rgba(33, 150, 243, 0.1);
-    }
-    
-    .remove-btn {
-        color: #f44336;
-    }
-    
-    .remove-btn:hover {
-        background-color: rgba(244, 67, 54, 0.1);
-    }
-    
-    .remove-form {
+    .review-content p {
         margin: 0;
-    }
-    
-    .user-review-section {
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #333;
-    }
-    
-    .user-review-section h3 {
-        font-size: 1.1rem;
-        margin-bottom: 10px;
-        color: var(--accent-blue);
-        font-weight: 500;
-    }
-    
-    .user-review {
-        font-style: italic;
-        color: var(--primary-text);
         line-height: 1.6;
-        font-size: 0.95rem;
+        color: var(--secondary-text);
+        font-style: italic;
     }
     
-    .btn-primary {
-        display: none; /* Hide the old button */
+    .quote-icon {
+        position: absolute;
+        top: 20px;
+        left: 15px;
+        color: rgba(255, 255, 255, 0.1);
     }
     
-    .btn-danger {
-        display: none; /* Hide the old button */
-    }
-    
-    .update-form-container {
-        margin-top: 10px;
-    }
-    
-    .update-game-form {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
+    /* Status form */
+    .status-form {
+        padding: 20px;
     }
     
     .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        margin-bottom: 20px;
     }
     
     .form-group label {
+        display: block;
+        margin-bottom: 8px;
         color: var(--primary-text);
         font-weight: 500;
     }
     
     .form-control {
-        background-color: #252525;
-        border: 1px solid #3a3a3a;
-        color: var(--primary-text);
-        padding: 10px 12px;
-        border-radius: 6px;
-        font-size: 0.95rem;
         width: 100%;
+        padding: 12px;
+        background-color: rgba(0, 0, 0, 0.4);
+        border: 1px solid #333;
+        border-radius: 4px;
+        color: var(--primary-text);
+        font-size: 0.95rem;
     }
     
     .form-control:focus {
-        border-color: var(--accent-blue);
         outline: none;
+        border-color: var(--accent-blue);
+    }
+    
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
     }
     
     textarea.form-control {
@@ -615,99 +746,359 @@
         min-height: 80px;
     }
     
-    .form-actions {
+    /* Rating slider */
+    .user-rating-input {
         display: flex;
-        gap: 10px;
-        margin-top: 5px;
+        align-items: center;
+        gap: 12px;
     }
     
-    .btn-save {
+    input[type="range"] {
+        flex: 1;
+        -webkit-appearance: none;
+        height: 6px;
+        background: #333;
+        border-radius: 3px;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--accent-blue);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    
+    .user-rating-display {
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+        min-width: 44px;
+        text-align: right;
+    }
+    
+    /* Form action buttons */
+    .form-actions {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .btn-save, .btn-add-to-library {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         background-color: var(--accent-blue);
         color: white;
         border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        flex: 1;
-    }
-    
-    .btn-save:hover {
-        background-color: var(--accent-blue-hover);
-    }
-    
-    .btn-cancel {
-        background-color: transparent;
-        color: var(--secondary-text);
-        border: 1px solid #3a3a3a;
-        padding: 8px 16px;
-        border-radius: 6px;
+        padding: 12px 20px;
+        border-radius: 4px;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s ease;
-        flex: 1;
+        text-decoration: none;
+    }
+    
+    .btn-save:hover, .btn-add-to-library:hover {
+        background-color: var(--accent-blue-hover);
+        transform: translateY(-2px);
+    }
+    
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--secondary-text);
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
     
     .btn-cancel:hover {
-        background-color: #2a2a2a;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: var(--primary-text);
     }
     
+    /* Tabs styling */
+    .game-details-tabs {
+        margin-top: 40px;
+    }
+    
+    .tabs-header {
+        display: flex;
+        border-bottom: 1px solid #333;
+        margin-bottom: 25px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+    
+    .tabs-header::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+    
+    .tab-btn {
+        background: none;
+        border: none;
+        color: var(--secondary-text);
+        padding: 10px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.3s ease;
+        white-space: nowrap;
+    }
+    
+    .tab-btn:hover {
+        color: var(--primary-text);
+    }
+    
+    .tab-btn.active {
+        color: var(--accent-blue);
+    }
+    
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--accent-blue);
+        border-radius: 1.5px;
+    }
+    
+    .tab-pane {
+        display: none;
+    }
+    
+    .tab-pane.active {
+        display: block;
+    }
+    
+    /* Summary tab */
+    .game-summary, .game-storyline {
+        margin-bottom: 30px;
+    }
+    
+    .game-summary h2, .game-storyline h2, 
+    #screenshots h2, #videos h2, #similar h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .game-summary p, .game-storyline p {
+        line-height: 1.7;
+        color: var(--secondary-text);
+    }
+    
+    /* No content message */
+    .no-content {
+        padding: 20px;
+        background-color: var(--secondary-bg);
+        border-radius: 4px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .no-content p {
+        color: var(--secondary-text);
+    }
+    
+    /* Screenshots tab */
+    .screenshots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        overflow: hidden;
+    }
+    
+    .screenshot-item {
+        position: relative;
+        height: 0;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        overflow: hidden;
+        border-radius: 4px;
+        transition: transform 0.3s ease;
+    }
+    
+    .screenshot-item:hover {
+        transform: scale(1.02);
+    }
+    
+    .screenshot-item img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    
+    /* Videos tab */
+    .videos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 20px;
+        overflow: hidden;
+    }
+    
+    .video-item {
+        position: relative;
+        height: 0;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        overflow: hidden;
+        border-radius: 4px;
+    }
+    
+    .video-item iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 4px;
+    }
+    
+    /* Similar Games tab */
+    .similar-games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+        overflow: visible;
+    }
+    
+    .similar-game-card {
+        display: flex;
+        flex-direction: column;
+        text-decoration: none;
+        transition: transform 0.3s ease;
+    }
+    
+    .similar-game-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .similar-game-cover {
+        position: relative;
+        height: 0;
+        padding-bottom: 133%; /* 3:4 aspect ratio */
+        overflow: hidden;
+        border-radius: 4px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        margin-bottom: 10px;
+    }
+    
+    .similar-game-cover img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .similar-game-info {
+        padding: 5px;
+    }
+    
+    .similar-game-info h3 {
+        font-size: 1rem;
+        margin: 0 0 5px 0;
+        color: var(--primary-text);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .similar-game-year {
+        font-size: 0.85rem;
+        color: var(--secondary-text);
+    }
+    
+    /* Responsive design */
     @media (max-width: 992px) {
-        .game-detail-grid {
+        .game-main-details {
             grid-template-columns: 1fr;
+            gap: 30px;
         }
         
-        .game-cover-column {
-            max-width: 400px;
+        .game-cover {
+            max-width: 300px;
             margin: 0 auto;
+        }
+        
+        .videos-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         }
     }
     
     @media (max-width: 768px) {
-        .game-cover-large {
-            height: 400px;
+        .game-title {
+            font-size: 2rem;
         }
         
-        .game-title-large {
-            font-size: 1.8rem;
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .tabs-header {
+            padding-bottom: 10px;
+        }
+        
+        .screenshots-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+        
+        .videos-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .similar-games-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         }
     }
     
     @media (max-width: 480px) {
-        .game-cover-large {
+        .game-cover {
             height: 350px;
         }
         
-        .game-info-column {
+        .game-details-container {
             padding: 15px;
+        }
+        
+        .tab-btn {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .screenshots-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .similar-games-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
         }
     }
     
-    .interactive-rating {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
+    /* Fix for scrollbar issues */
+    * {
+        box-sizing: border-box;
     }
     
-    .interactive-stars {
-        display: flex;
-        gap: 5px;
-        margin-right: 10px;
-    }
-    
-    .star-selectable {
-        cursor: pointer;
-        transition: transform 0.1s ease, color 0.2s ease;
-    }
-    
-    .star-selectable:hover {
-        transform: scale(1.2);
-    }
-    
-    .rating-value-display {
-        color: var(--primary-text);
-        font-size: 0.95rem;
+    html, body {
+        overflow-x: hidden;
     }
 </style>
 {% endblock %} 
