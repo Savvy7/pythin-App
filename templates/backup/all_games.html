@@ -7,19 +7,23 @@
         <h1>Game Collection</h1>
         <p class="subtitle">Browse our entire collection of games</p>
         
-        <form action="{{ url_for('search_local') }}" method="get" class="global-search-form">
+        <form action="{{ url_for('games.search') }}" method="get" class="global-search-form">
             <div class="search-wrapper">
-                <input type="text" name="query" placeholder="Search our game database..." 
+                <input type="text" name="query" placeholder="Search games..." 
                        value="{{ search_query|default('') }}" required>
                 <button type="submit">Search</button>
             </div>
         </form>
     </div>
     
+    <div class="search-tip-message">
+        <p><strong>Tip:</strong> Use the filters below to browse games by title, genre, or platform. For more specific searches, use the search box above.</p>
+    </div>
+    
     <div class="filter-sort-controls">
         <div class="control-group search-group">
-            <label for="search-games">Search Games:</label>
-            <input type="text" id="search-games" class="filter-control" placeholder="Search by title...">
+            <label for="search-games">Filter Games:</label>
+            <input type="text" id="search-games" class="filter-control" placeholder="Filter displayed games by title...">
         </div>
         
         <div class="control-group">
@@ -125,13 +129,13 @@
                         {% endif %}
                         
                         <div class="game-actions">
-                            <a href="{{ url_for('game_details', igdb_id=game.igdb_id) }}" class="game-btn game-btn-details">
+                            <a href="{{ url_for('games.game_details', igdb_id=game.igdb_id) }}" class="game-btn game-btn-details">
                                 Details
                             </a>
                             
                             {% if game.igdb_id not in user_library_ids %}
-                                <a href="{{ url_for('add_game', igdb_id=game.igdb_id) }}" class="game-btn game-btn-add">
-                                    Add to Library
+                                <a href="{{ url_for('library.add_game_get', igdb_id=game.igdb_id) }}" class="game-btn game-btn-add">
+                                    Add
                                 </a>
                             {% else %}
                                 <span class="game-btn game-btn-in-library">In Library</span>
@@ -309,6 +313,24 @@
     
     .search-wrapper button:hover {
         background-color: var(--accent-blue-hover);
+    }
+    
+    .search-tip-message {
+        background-color: #2d2d2d;
+        border-left: 4px solid var(--accent-blue);
+        margin: 0 0 20px 0;
+        padding: 12px 15px;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    
+    .search-tip-message p {
+        margin: 0;
+    }
+    
+    .search-tip-message strong {
+        color: var(--accent-blue);
     }
     
     .filter-sort-controls {
@@ -517,6 +539,11 @@
         transition: all 0.3s ease;
         text-decoration: none;
         flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        white-space: nowrap;
     }
     
     .game-btn-details {
@@ -532,6 +559,12 @@
         background-color: transparent;
         color: #4caf50;
         border: 1px solid #4caf50;
+    }
+    
+    .game-btn-add::before {
+        content: "+";
+        margin-right: 4px;
+        font-weight: bold;
     }
     
     .game-btn-add:hover {

@@ -3,241 +3,242 @@
 {% block title %}All Games{% endblock %}
 
 {% block content %}
-    <div class="all-games-header">
+<div class="all-games-container">
+    <div class="games-header">
         <h1>Game Collection</h1>
-        <p class="subtitle">Browse our entire collection of games</p>
-        
-        <form action="{{ url_for('games.search') }}" method="get" class="global-search-form">
-            <div class="search-wrapper">
-                <input type="text" name="query" placeholder="Search games..." 
-                       value="{{ search_query|default('') }}" required>
-                <button type="submit">Search</button>
+        <p>Discover our extensive collection of games across all platforms and genres</p>
+    </div>
+    
+    <div class="filter-controls">
+        <div class="filter-section">
+            <div class="search-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="search-input" placeholder="Filter by title...">
             </div>
-        </form>
-    </div>
-    
-    <div class="search-tip-message">
-        <p><strong>Tip:</strong> Use the filters below to browse games by title, genre, or platform. For more specific searches, use the search box above.</p>
-    </div>
-    
-    <div class="filter-sort-controls">
-        <div class="control-group search-group">
-            <label for="search-games">Filter Games:</label>
-            <input type="text" id="search-games" class="filter-control" placeholder="Filter displayed games by title...">
-        </div>
-        
-        <div class="control-group">
-            <label for="sort-by">Sort By:</label>
-            <select id="sort-by" class="filter-control">
-                <option value="title-asc">Title (A-Z)</option>
-                <option value="title-desc">Title (Z-A)</option>
-                <option value="rating-desc">Rating (High to Low)</option>
-                <option value="rating-asc">Rating (Low to High)</option>
-                <option value="weighted-desc">Weighted Rating (High to Low)</option>
-                <option value="release-desc">Release Date (Newest First)</option>
-                <option value="release-asc">Release Date (Oldest First)</option>
-            </select>
-        </div>
-        
-        <div class="control-group">
-            <label for="filter-genre">Filter Genre:</label>
-            <select id="filter-genre" class="filter-control">
-                <option value="all">All Genres</option>
-                {% for genre in genres %}
+            
+            <div class="filter-group">
+                <select id="filter-genre" class="filter-select">
+                    <option value="all">All Genres</option>
+                    {% for genre in genres %}
                     <option value="{{ genre }}">{{ genre }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div class="control-group">
-            <label for="filter-platform">Filter Platform:</label>
-            <select id="filter-platform" class="filter-control">
-                <option value="all">All Platforms</option>
-                {% for platform in platforms %}
+                    {% endfor %}
+                </select>
+                
+                <select id="filter-platform" class="filter-select">
+                    <option value="all">All Platforms</option>
+                    {% for platform in platforms %}
                     <option value="{{ platform }}">{{ platform }}</option>
-                {% endfor %}
-            </select>
+                    {% endfor %}
+                </select>
+                
+                <select id="sort-by" class="filter-select">
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                    <option value="rating-desc">Rating (High to Low)</option>
+                    <option value="rating-asc">Rating (Low to High)</option>
+                    <option value="weighted-desc">Weighted Rating (High to Low)</option>
+                    <option value="release-desc">Newest First</option>
+                    <option value="release-asc">Oldest First</option>
+                </select>
+            </div>
         </div>
         
-        <button id="apply-filters" class="filter-button">Apply Filters</button>
-        <button id="reset-filters" class="filter-button filter-button-reset">Reset</button>
+        <div class="filter-actions">
+            <button id="apply-filters" class="btn btn-primary">Apply Filters</button>
+            <button id="reset-filters" class="btn btn-outline">Reset</button>
+        </div>
     </div>
     
-    {% if games %}
-        <div class="game-grid">
-            {% for game in games %}
-                <div class="game-card" 
-                     data-title="{{ game.title }}" 
-                     data-rating="{{ game.rating }}" 
-                     data-weighted="{{ game.weighted_rating }}"
-                     data-release="{{ game.release_date }}"
-                     data-genres="{{ game.genres|join(',') }}"
-                     data-platforms="{{ game.platforms|join(',') }}">
-                    <div class="game-cover">
-                        {% if game.cover %}
-                            {% set cover_url = game.cover|replace('/t_thumb/', '/t_cover_big/') %}
-                            <img src="https:{{ cover_url }}" alt="{{ game.title }} cover">
-                        {% else %}
-                            <div class="game-cover-placeholder">
-                                <span>{{ game.title[:2].upper() }}</span>
-                            </div>
-                        {% endif %}
+    <div id="no-results-message" class="no-results" style="display: none;">
+        <div class="no-results-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+        </div>
+        <h2>No games match your filters</h2>
+        <p>Try adjusting your filters or search criteria.</p>
+        <button id="clear-filters" class="btn btn-primary">Clear All Filters</button>
+    </div>
+    
+    <div class="games-grid">
+        {% for game in games %}
+        <div class="game-card" 
+             data-title="{{ game.title }}" 
+             data-rating="{{ game.rating|default(0) }}" 
+             data-weighted="{{ game.weighted_rating|default(0) }}"
+             data-release="{{ game.release_date|default('') }}"
+             data-genres="{{ game.genres|join(',') }}"
+             data-platforms="{{ game.platforms|join(',') }}">
+            <a href="{{ url_for('games.game_details', igdb_id=game.igdb_id) }}" class="game-card-link">
+                <div class="game-cover">
+                    {% if game.cover %}
+                        {% set cover_url = game.cover|replace('/t_thumb/', '/t_cover_big/') %}
+                        <img src="https:{{ cover_url }}" alt="{{ game.title }} cover">
+                    {% else %}
+                    <div class="cover-placeholder">
+                        <span>{{ game.title[:2].upper() }}</span>
                     </div>
+                    {% endif %}
                     
-                    <div class="game-info">
-                        <h3 class="game-title">{{ game.title }}</h3>
-                        
-                        <div class="game-meta">
-                            {% if game.release_date %}
-                                <span class="release-date">Released: {{ game.release_date }}</span>
-                            {% endif %}
-                            
-                            {% if game.genres %}
-                                <span class="genres">
-                                    {% for genre in game.genres[:2] %}
-                                        {{ genre }}{% if not loop.last %}, {% endif %}
-                                    {% endfor %}
-                                    {% if game.genres|length > 2 %}...{% endif %}
-                                </span>
-                            {% endif %}
-                        </div>
-                        
-                        {% if game.rating or game.weighted_rating %}
-                            <div class="rating-container">
-                                {% if game.rating %}
-                                    <div class="rating-item">
-                                        <div class="rating-stars">
-                                            {% for i in range(1, 6) %}
-                                                <span class="star {% if i <= (game.rating / 20) %}filled{% endif %}">★</span>
-                                            {% endfor %}
-                                        </div>
-                                        <span class="rating-label">User: {{ "%.1f"|format(game.rating / 10) }}/10</span>
-                                    </div>
-                                {% endif %}
-                                
-                                {% if game.weighted_rating %}
-                                    <div class="rating-item">
-                                        <div class="rating-stars">
-                                            {% for i in range(1, 6) %}
-                                                <span class="star {% if i <= (game.weighted_rating / 2) %}filled{% endif %}">★</span>
-                                            {% endfor %}
-                                        </div>
-                                        <span class="rating-label">Weighted: {{ "%.1f"|format(game.weighted_rating) }}/10</span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        
+                    <div class="game-hover-info">
                         <div class="game-actions">
-                            <a href="{{ url_for('games.game_details', igdb_id=game.igdb_id) }}" class="game-btn game-btn-details">
-                                Details
-                            </a>
-                            
-                            {% if game.igdb_id not in user_library_ids %}
-                                <a href="{{ url_for('library.add_game', igdb_id=game.igdb_id) }}" class="game-btn game-btn-add">
-                                    Add
-                                </a>
+                            <span class="view-details">View Details</span>
+                            {% if game.igdb_id in user_library_ids %}
+                            <span class="in-library">In Library</span>
                             {% else %}
-                                <span class="game-btn game-btn-in-library">In Library</span>
+                            <div class="game-actions">
+                                <form action="{{ url_for('library.add_game') }}" method="post" class="quick-add-form">
+                                    <input type="hidden" name="igdb_id" value="{{ game.igdb_id }}">
+                                    <input type="hidden" name="title" value="{{ game.title }}">
+                                    <input type="hidden" name="cover" value="{{ game.cover }}">
+                                    <button type="submit" class="add-to-library-btn">
+                                        <i class="fas fa-plus"></i> Add to Library
+                                    </button>
+                                </form>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-            {% endfor %}
+                <div class="game-info">
+                    <h3 class="game-title">{{ game.title }}</h3>
+                    <div class="game-meta">
+                        {% if game.release_date %}
+                        <span class="release-year">
+                            {% if game.release_date is string %}
+                                {{ game.release_date }}
+                            {% else %}
+                                {{ game.release_date.strftime('%Y') }}
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                        
+                        {% if game.rating %}
+                        <div class="rating">
+                            <div class="rating-bar">
+                                <div class="rating-fill" {% if game.rating %}style="width: {{ (game.rating/100) * 100 }}%"{% endif %}></div>
+                            </div>
+                            <span class="rating-text">{{ ((game.rating/100) * 10)|round(1) }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if game.genres %}
+                    <div class="game-genres">
+                        {% for genre in game.genres[:3] %}
+                        <span class="genre">{{ genre }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
         </div>
-    {% else %}
-        <div class="no-games">
-            <div class="empty-icon">🎮</div>
-            <h2>No games found</h2>
-            <p>Try changing your filters or check back later.</p>
-        </div>
-    {% endif %}
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('search-games');
-        const sortSelect = document.getElementById('sort-by');
+        const searchInput = document.getElementById('search-input');
         const genreSelect = document.getElementById('filter-genre');
         const platformSelect = document.getElementById('filter-platform');
+        const sortSelect = document.getElementById('sort-by');
         const applyButton = document.getElementById('apply-filters');
         const resetButton = document.getElementById('reset-filters');
+        const clearFiltersButton = document.getElementById('clear-filters');
         const gameCards = document.querySelectorAll('.game-card');
+        const noResultsMessage = document.getElementById('no-results-message');
         
-        // Add event listener for search input (filter as you type)
-        searchInput.addEventListener('input', function() {
-            filterAndSortGames();
-        });
+        // Apply filters when button is clicked
+        applyButton.addEventListener('click', filterAndSortGames);
         
-        // Apply filters and sort
-        applyButton.addEventListener('click', function() {
-            filterAndSortGames();
-        });
-        
-        // Reset filters and sort
+        // Reset filters
         resetButton.addEventListener('click', function() {
             searchInput.value = '';
-            sortSelect.value = 'title-asc';
             genreSelect.value = 'all';
             platformSelect.value = 'all';
+            sortSelect.value = 'title-asc';
+            filterAndSortGames();
+        });
+        
+        // Clear filters from no results message
+        clearFiltersButton.addEventListener('click', function() {
+            searchInput.value = '';
+            genreSelect.value = 'all';
+            platformSelect.value = 'all';
+            sortSelect.value = 'title-asc';
             filterAndSortGames();
         });
         
         function filterAndSortGames() {
-            const searchValue = searchInput.value.toLowerCase().trim();
+            const searchTerm = searchInput.value.toLowerCase();
+            const genreFilter = genreSelect.value;
+            const platformFilter = platformSelect.value;
             const sortValue = sortSelect.value;
-            const genreValue = genreSelect.value;
-            const platformValue = platformSelect.value;
             
-            // Convert games to array for sorting
-            const gamesArray = Array.from(gameCards);
+            let visibleCount = 0;
             
-            // Filter games
-            gamesArray.forEach(game => {
-                let showGame = true;
+            // First filter the games
+            gameCards.forEach(card => {
+                const title = card.getAttribute('data-title').toLowerCase();
+                const genres = card.getAttribute('data-genres').split(',');
+                const platforms = card.getAttribute('data-platforms').split(',');
+                
+                let visible = true;
                 
                 // Filter by search term
-                if (searchValue) {
-                    const gameTitle = game.getAttribute('data-title').toLowerCase();
-                    if (!gameTitle.includes(searchValue)) {
-                        showGame = false;
-                    }
+                if (searchTerm && !title.includes(searchTerm)) {
+                    visible = false;
                 }
                 
                 // Filter by genre
-                if (showGame && genreValue !== 'all') {
-                    const gameGenres = game.getAttribute('data-genres').split(',');
-                    if (!gameGenres.includes(genreValue)) {
-                        showGame = false;
-                    }
+                if (genreFilter !== 'all' && !genres.includes(genreFilter)) {
+                    visible = false;
                 }
                 
                 // Filter by platform
-                if (showGame && platformValue !== 'all') {
-                    const gamePlatforms = game.getAttribute('data-platforms').split(',');
-                    if (!gamePlatforms.includes(platformValue)) {
-                        showGame = false;
-                    }
+                if (platformFilter !== 'all' && !platforms.includes(platformFilter)) {
+                    visible = false;
                 }
                 
-                // Show or hide game
-                game.style.display = showGame ? 'flex' : 'none';
+                // Show or hide the card
+                card.style.display = visible ? 'block' : 'none';
+                
+                if (visible) {
+                    visibleCount++;
+                }
             });
             
-            // Sort games
-            gamesArray.sort((a, b) => {
+            // Show or hide the "no results" message
+            noResultsMessage.style.display = visibleCount === 0 ? 'flex' : 'none';
+            
+            // Now sort the visible cards
+            const gameGrid = document.querySelector('.games-grid');
+            const cardsArray = Array.from(gameCards);
+            
+            cardsArray.sort((a, b) => {
+                if (a.style.display === 'none' || b.style.display === 'none') {
+                    return 0; // Don't change order of hidden cards
+                }
+                
                 switch (sortValue) {
                     case 'title-asc':
                         return a.getAttribute('data-title').localeCompare(b.getAttribute('data-title'));
                     case 'title-desc':
                         return b.getAttribute('data-title').localeCompare(a.getAttribute('data-title'));
                     case 'rating-desc':
-                        return parseFloat(b.getAttribute('data-rating') || 0) - parseFloat(a.getAttribute('data-rating') || 0);
+                        return parseFloat(b.getAttribute('data-rating')) - parseFloat(a.getAttribute('data-rating'));
                     case 'rating-asc':
-                        return parseFloat(a.getAttribute('data-rating') || 0) - parseFloat(b.getAttribute('data-rating') || 0);
+                        return parseFloat(a.getAttribute('data-rating')) - parseFloat(b.getAttribute('data-rating'));
                     case 'weighted-desc':
-                        return parseFloat(b.getAttribute('data-weighted') || 0) - parseFloat(a.getAttribute('data-weighted') || 0);
+                        return parseFloat(b.getAttribute('data-weighted')) - parseFloat(a.getAttribute('data-weighted'));
                     case 'release-desc':
                         return b.getAttribute('data-release').localeCompare(a.getAttribute('data-release'));
                     case 'release-asc':
@@ -247,10 +248,9 @@
                 }
             });
             
-            // Reorder the grid
-            const gameGrid = document.querySelector('.game-grid');
-            gamesArray.forEach(game => {
-                gameGrid.appendChild(game);
+            // Reapply sorted cards to the grid
+            cardsArray.forEach(card => {
+                gameGrid.appendChild(card);
             });
         }
     });
@@ -259,193 +259,176 @@
 
 {% block extra_css %}
 <style>
-    .all-games-header {
-        text-align: center;
-        margin-bottom: 2rem;
+    .all-games-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
     }
     
-    h1 {
+    .games-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .games-header h1 {
         font-size: 2.5rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 10px;
         color: var(--primary-text);
     }
     
-    .subtitle {
+    .games-header p {
         color: var(--secondary-text);
         font-size: 1.1rem;
-    }
-    
-    .global-search-form {
-        margin: 1.5rem auto;
         max-width: 600px;
+        margin: 0 auto;
     }
     
-    .search-wrapper {
+    .filter-controls {
+        background-color: #161616;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
         display: flex;
-        width: 100%;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        overflow: hidden;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     
-    .search-wrapper input {
+    .filter-section {
         flex: 1;
-        padding: 12px 16px;
-        border: none;
-        background-color: #2a2a2a;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+    }
+    
+    #search-input {
+        width: 100%;
+        padding: 12px 12px 12px 40px;
+        border-radius: 6px;
+        border: 1px solid #333;
+        background-color: #222;
         color: var(--primary-text);
         font-size: 1rem;
     }
     
-    .search-wrapper input:focus {
+    #search-input:focus {
         outline: none;
-    }
-    
-    .search-wrapper button {
-        padding: 0 20px;
-        background-color: var(--accent-blue);
-        color: white;
-        border: none;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-    
-    .search-wrapper button:hover {
-        background-color: var(--accent-blue-hover);
-    }
-    
-    .search-tip-message {
-        background-color: #2d2d2d;
-        border-left: 4px solid var(--accent-blue);
-        margin: 0 0 20px 0;
-        padding: 12px 15px;
-        border-radius: 4px;
-        font-size: 0.95rem;
-        line-height: 1.4;
-    }
-    
-    .search-tip-message p {
-        margin: 0;
-    }
-    
-    .search-tip-message strong {
-        color: var(--accent-blue);
-    }
-    
-    .filter-sort-controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 25px;
-        padding: 15px;
-        background-color: #1a1a1a;
-        border-radius: 8px;
-        align-items: center;
-    }
-    
-    .search-group {
-        flex-grow: 1;
-        min-width: 250px;
-    }
-    
-    #search-games {
-        width: 100%;
-    }
-    
-    .control-group {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        min-width: 180px;
-    }
-    
-    .control-group label {
-        font-size: 0.9rem;
-        color: var(--primary-text);
-    }
-    
-    .filter-control {
-        background-color: #252525;
-        border: 1px solid #3a3a3a;
-        color: var(--primary-text);
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 0.95rem;
-    }
-    
-    .filter-control:focus {
         border-color: var(--accent-blue);
-        outline: none;
     }
     
-    .filter-button {
-        background-color: var(--accent-blue);
-        color: white;
-        border: none;
-        padding: 8px 16px;
+    .filter-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-select {
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px solid #333;
+        background-color: #222;
+        color: var(--primary-text);
+        font-size: 0.95rem;
+        min-width: 140px;
+        cursor: pointer;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        align-self: flex-end;
+    }
+    
+    .btn {
+        padding: 10px 16px;
         border-radius: 6px;
         font-weight: 500;
+        font-size: 0.95rem;
         cursor: pointer;
-        transition: background-color 0.3s ease;
-        margin-left: auto;
-        align-self: flex-end;
-        height: 38px;
+        transition: all 0.3s ease;
+        border: none;
     }
     
-    .filter-button:hover {
+    .btn-primary {
+        background-color: var(--accent-blue);
+        color: white;
+    }
+    
+    .btn-primary:hover {
         background-color: var(--accent-blue-hover);
     }
     
-    .filter-button-reset {
+    .btn-outline {
         background-color: transparent;
-        border: 1px solid #3a3a3a;
+        border: 1px solid #444;
         color: var(--secondary-text);
     }
     
-    .filter-button-reset:hover {
-        background-color: #2a2a2a;
+    .btn-outline:hover {
+        background-color: rgba(255, 255, 255, 0.05);
         color: var(--primary-text);
     }
     
-    .game-grid {
+    .games-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 25px;
     }
     
     .game-card {
         position: relative;
-        display: flex;
-        flex-direction: column;
-        background-color: #1a1a1a;
-        border-radius: 10px;
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
         height: 100%;
     }
     
     .game-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .game-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
     
     .game-cover {
-        height: 320px;
-        overflow: hidden;
         position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #0f0f0f;
+        width: 100%;
+        height: 0;
+        padding-bottom: 133%; /* 3:4 aspect ratio */
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        margin-bottom: 12px;
     }
     
     .game-cover img {
-        width: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
         height: 100%;
-        max-width: 100%;
-        object-fit: contain;
+        object-fit: cover;
         transition: transform 0.3s ease;
     }
     
@@ -453,195 +436,229 @@
         transform: scale(1.05);
     }
     
-    .game-cover-placeholder {
+    .cover-placeholder {
+        position: absolute;
+        width: 100%;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+        background: linear-gradient(45deg, #1a1a1a, #333);
         color: var(--secondary-text);
-        font-size: 2.5rem;
+        font-size: 2rem;
         font-weight: bold;
     }
     
-    .game-info {
+    .game-hover-info {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 50%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
         padding: 15px;
-        display: flex;
-        flex-direction: column;
-        flex: 1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
     
-    .game-title {
-        font-size: 1.2rem;
-        margin-bottom: 8px;
-        color: var(--primary-text);
-        line-height: 1.3;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .game-meta {
-        margin-bottom: 10px;
-        color: var(--secondary-text);
-        font-size: 0.85rem;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-    
-    .rating-container {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        margin-bottom: 15px;
-    }
-    
-    .rating-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .rating-stars {
-        display: flex;
-        gap: 2px;
-    }
-    
-    .star {
-        color: #555;
-        font-size: 0.9rem;
-    }
-    
-    .star.filled {
-        color: #ffca28;
-    }
-    
-    .rating-label {
-        color: var(--secondary-text);
-        font-size: 0.8rem;
+    .game-card:hover .game-hover-info {
+        opacity: 1;
     }
     
     .game-actions {
-        margin-top: auto;
         display: flex;
-        gap: 8px;
+        flex-direction: column;
+        gap: 10px;
     }
     
-    .game-btn {
-        padding: 8px 12px;
+    .view-details {
+        background-color: var(--accent-blue);
+        color: white;
+        padding: 8px 10px;
         border-radius: 4px;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 500;
         text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        flex: 1;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .in-library {
+        background-color: rgba(0, 200, 83, 0.2);
+        color: #00c853;
+        padding: 8px 10px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .add-to-library-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 36px;
-        white-space: nowrap;
-    }
-    
-    .game-btn-details {
-        background-color: var(--accent-blue);
+        gap: 6px;
+        background-color: rgba(255, 255, 255, 0.1);
         color: white;
+        padding: 8px 10px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        width: 100%;
     }
     
-    .game-btn-details:hover {
-        background-color: var(--accent-blue-hover);
+    .add-to-library-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2);
     }
     
-    .game-btn-add {
-        background-color: transparent;
-        color: #4caf50;
-        border: 1px solid #4caf50;
+    .game-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
     
-    .game-btn-add::before {
-        content: "+";
-        margin-right: 4px;
-        font-weight: bold;
-    }
-    
-    .game-btn-add:hover {
-        background-color: rgba(76, 175, 80, 0.1);
-    }
-    
-    .game-btn-in-library {
-        background-color: transparent;
-        color: var(--secondary-text);
-        border: 1px solid #3a3a3a;
-        cursor: default;
-    }
-    
-    .no-games {
-        text-align: center;
-        padding: 4rem 2rem;
-    }
-    
-    .empty-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-    }
-    
-    .no-games h2 {
-        font-size: 1.8rem;
+    .game-title {
+        font-size: 1rem;
+        margin: 0 0 5px 0;
+        line-height: 1.3;
         color: var(--primary-text);
-        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
     
-    .no-games p {
+    .game-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .release-year {
         color: var(--secondary-text);
-        margin-bottom: 2rem;
+        font-size: 0.85rem;
     }
     
-    @media (max-width: 1200px) {
-        .game-grid {
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        }
+    .rating {
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
     
-    @media (max-width: 992px) {
-        .filter-sort-controls {
+    .rating-bar {
+        width: 50px;
+        height: 4px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .rating-fill {
+        height: 100%;
+        background-color: var(--accent-blue);
+    }
+    
+    .rating-text {
+        color: var(--accent-blue);
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .game-genres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .genre {
+        font-size: 0.75rem;
+        color: var(--secondary-text);
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+    
+    /* No results styling */
+    .no-results {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #161616;
+        border-radius: 10px;
+        margin: 30px 0;
+    }
+    
+    .no-results-icon {
+        margin-bottom: 20px;
+        color: var(--secondary-text);
+    }
+    
+    .no-results h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .no-results p {
+        color: var(--secondary-text);
+        margin-bottom: 25px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .filter-controls {
             flex-direction: column;
             align-items: stretch;
         }
         
-        .filter-button {
-            margin-left: 0;
+        .filter-actions {
+            flex-direction: row;
             width: 100%;
         }
         
-        .game-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        .btn {
+            flex: 1;
         }
         
-        .game-cover {
-            height: 280px;
-        }
-    }
-    
-    @media (max-width: 768px) {
-        .game-grid {
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        }
-        
-        .game-cover {
-            height: 250px;
+        .games-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
         }
     }
     
     @media (max-width: 480px) {
-        .game-grid {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        .filter-group {
+            flex-direction: column;
         }
         
-        .game-cover {
-            height: 220px;
+        .filter-select {
+            width: 100%;
+        }
+        
+        .games-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .games-header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .games-header p {
+            font-size: 0.95rem;
         }
     }
 </style>

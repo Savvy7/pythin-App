@@ -3,53 +3,104 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-    <h1>Find Your Games</h1>
-    <p class="subtitle">Search for games to add to your collection</p>
-    
-    <div class="search-container">
-        <form action="{{ url_for('games.search') }}" method="get" class="search-form">
-            <div class="search-input-group">
-                <input type="text" name="query" placeholder="Search for games..." class="search-input" required>
-                <button type="submit" class="search-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                </button>
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Discover & Track Your Gaming Journey</h1>
+            <p class="hero-subtitle">Search, collect, and never lose track of your favorite games</p>
+            
+            <div class="search-container">
+                <form action="{{ url_for('games.search') }}" method="get" class="search-form">
+                    <div class="search-input-group">
+                        <input type="text" name="query" placeholder="Search for games..." class="search-input" required>
+                        <button type="submit" class="search-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
     
-    <div class="popular-searches">
-        <h3>Popular Searches</h3>
+    <div class="home-section">
+        <h2 class="section-title">Popular Searches</h2>
         <div class="search-tags">
             <a href="{{ url_for('games.search') }}?query=Cyberpunk" class="search-tag">Cyberpunk 2077</a>
             <a href="{{ url_for('games.search') }}?query=God of War" class="search-tag">God of War</a>
             <a href="{{ url_for('games.search') }}?query=Zelda" class="search-tag">The Legend of Zelda</a>
             <a href="{{ url_for('games.search') }}?query=Minecraft" class="search-tag">Minecraft</a>
             <a href="{{ url_for('games.search') }}?query=FIFA" class="search-tag">FIFA</a>
+            <a href="{{ url_for('games.search') }}?query=Call of Duty" class="search-tag">Call of Duty</a>
+            <a href="{{ url_for('games.search') }}?query=Assassin's Creed" class="search-tag">Assassin's Creed</a>
+            <a href="{{ url_for('games.search') }}?query=Grand Theft Auto" class="search-tag">Grand Theft Auto</a>
+        </div>
+    </div>
+    
+    <div class="home-section features-section">
+        <h2 class="section-title">Track Your Games</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Discover</h3>
+                <p>Search for any game across multiple platforms and build your collection</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Organize</h3>
+                <p>Keep track of games you're playing, completed, or want to play</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <h3>Rate & Review</h3>
+                <p>Score your games and write reviews to remember your experiences</p>
+            </div>
         </div>
     </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    h1 {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-        color: var(--primary-text);
+    .hero {
+        height: 80vh;
+        min-height: 600px;
+        max-height: 800px;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(20,20,20,1) 100%), 
+                    url('https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
+        background-size: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         text-align: center;
+        margin: -30px 0 0;
+        padding: 0 20px;
+        position: relative;
     }
     
-    .subtitle {
-        text-align: center;
+    .hero-content {
+        max-width: 800px;
+        padding: 0 20px;
+    }
+    
+    h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.4rem;
         color: var(--secondary-text);
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
+        font-weight: 400;
     }
     
     .search-container {
         max-width: 600px;
-        margin: 0 auto 2rem;
+        margin: 0 auto;
     }
     
     .search-form {
@@ -59,26 +110,25 @@
     .search-input-group {
         display: flex;
         position: relative;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-radius: 50px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        border-radius: 4px;
         overflow: hidden;
         transition: all 0.3s ease;
     }
     
     .search-input-group:focus-within {
-        box-shadow: 0 4px 20px rgba(33, 150, 243, 0.3);
+        box-shadow: 0 4px 25px rgba(0, 113, 235, 0.5);
     }
     
     .search-input {
         flex: 1;
         border: none;
-        background-color: #2a2a2a;
+        background-color: rgba(0, 0, 0, 0.75);
         color: var(--primary-text);
         padding: 16px 24px;
         font-size: 1.1rem;
         outline: none;
         width: 100%;
-        border-radius: 50px 0 0 50px;
     }
     
     .search-input::placeholder {
@@ -89,7 +139,7 @@
         background-color: var(--accent-blue);
         border: none;
         color: white;
-        padding: 0 20px;
+        padding: 0 25px;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -101,49 +151,116 @@
         background-color: var(--accent-blue-hover);
     }
     
-    .popular-searches {
-        text-align: center;
-        margin-top: 2rem;
+    .home-section {
+        padding: 60px 0;
     }
     
-    .popular-searches h3 {
-        font-size: 1.2rem;
-        color: var(--primary-text);
-        margin-bottom: 1rem;
-        font-weight: 500;
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        position: relative;
+        padding-left: 10px;
+    }
+    
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background-color: var(--accent-blue);
+        border-radius: 2px;
     }
     
     .search-tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        justify-content: center;
+        gap: 12px;
     }
     
     .search-tag {
-        background-color: rgba(33, 150, 243, 0.1);
-        color: var(--accent-blue);
-        padding: 8px 16px;
-        border-radius: 50px;
-        font-size: 0.9rem;
+        background-color: var(--secondary-bg);
+        color: var(--primary-text);
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-size: 1rem;
         text-decoration: none;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
     
     .search-tag:hover {
-        background-color: rgba(33, 150, 243, 0.2);
-        transform: translateY(-2px);
+        background-color: var(--card-hover-bg);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .features-section {
+        background-color: var(--secondary-bg);
+        margin: 0 -5%;
+        padding: 60px 5%;
+        border-radius: 8px;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+    }
+    
+    .feature-card {
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 30px;
+        border-radius: 6px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .feature-card p {
+        color: var(--secondary-text);
+        font-size: 0.95rem;
+        line-height: 1.6;
     }
     
     @media (max-width: 768px) {
+        .hero {
+            min-height: 500px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+        
         .search-input {
             font-size: 1rem;
             padding: 14px 20px;
         }
         
-        .search-tag {
-            padding: 6px 12px;
-            font-size: 0.8rem;
+        .features-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
