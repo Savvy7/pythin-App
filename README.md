@@ -163,10 +163,6 @@ gametracker/
 - [ ] Achievements and badges system
 - [ ] Theme customization options
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Acknowledgments
 
 - [IGDB](https://www.igdb.com/api) for providing the comprehensive video game database API
