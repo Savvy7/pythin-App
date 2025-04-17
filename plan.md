@@ -163,15 +163,3 @@ Integrate and document the use of specific DBMS features.
           # Handle error
       ```
     *   **Explanation:** Document the scenario and explain how the transaction ensures atomicity – either both inserts succeed, or neither does, preventing inconsistent states.
-
-## Next Steps / Implementation Order
-
-1.  Implement Phase 1 (Database Schema Changes). Run `db_setup.py`.
-2.  Implement Phase 2 (Backend Authentication & Core Tracking Logic).
-3.  Implement Phase 3 (Frontend Forms & Display). Test basic user registration, login, adding games, viewing library.
-4.  Implement Phase 4 (Advanced DBMS Features):
-    *   Add Indexing.
-    *   Implement and use the Database View.
-    *   Implement explicit Transactions for a chosen multi-step operation.
-    *   (Optional) Implement the deeper Normalization example.
-5.  Document the implementation details, especially focusing on the DBMS concepts used.
