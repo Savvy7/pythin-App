@@ -2,7 +2,8 @@
 
 A personal video game collection and tracking application that helps you manage your gaming backlog, track your progress, and discover new games.
 
-![GameTracker Screenshot](https://via.placeholder.com/800x400?text=GameTracker+Screenshot)
+![image](https://github.com/user-attachments/assets/ef45544d-c32c-4627-bb9d-fad0b85f121a)
+
 
 ## Features
 // projectpass
