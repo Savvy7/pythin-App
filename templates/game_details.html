@@ -25,21 +25,21 @@
         </form>
         {% endif %}
     </div>
-
+    
     <!-- Main Game Details -->
     <div class="game-main-details">
         <!-- Cover Image -->
         <div class="game-cover">
-            {% if game.cover %}
+                    {% if game.cover %}
                 {% set cover_url = game.cover|replace('/t_thumb/', '/t_cover_big/') %}
-                <img src="https:{{ cover_url }}" alt="{{ game.title }} cover">
-            {% else %}
+                        <img src="https:{{ cover_url }}" alt="{{ game.title }} cover">
+                    {% else %}
                 <div class="cover-placeholder">
-                    <span>{{ game.title[:2].upper() }}</span>
+                            <span>{{ game.title[:2].upper() }}</span>
+                        </div>
+                    {% endif %}
                 </div>
-            {% endif %}
-        </div>
-
+                
         <!-- Title and Main Info -->
         <div class="game-info">
             <h1 class="game-title">{{ game.title }}</h1>
@@ -49,7 +49,7 @@
                 {% for genre in game.genres %}
                 <span class="genre-tag">{{ genre }}</span>
                 {% endfor %}
-            </div>
+                        </div>
             {% endif %}
             
             <div class="game-meta">
@@ -106,7 +106,7 @@
                     <div class="in-library-badge">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
+                                </svg>
                         <span>In Your Library</span>
                     </div>
                     
@@ -117,30 +117,30 @@
                             <button id="edit-details-btn" class="edit-details-btn">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-                                </svg>
+                                    </svg>
                                 Edit
-                            </button>
+                                </button>
                         </div>
                         
                         <div class="user-game-content">
                             <div class="user-game-status">
                                 <div class="status-pill status-{{ library_status|lower }}">{{ library_status }}</div>
-                            </div>
-                            
+                    </div>
+                    
                             <div class="user-game-rating">
                                 <div class="rating-label">Your Rating</div>
                                 <div class="rating-stars" title="{{ personal_rating|default(0) }}/10">
                                     {% set rating_value = personal_rating|default(0)|int %}
-                                    {% for i in range(1, 11) %}
+                                {% for i in range(1, 11) %}
                                         {% if i <= rating_value %}
                                             <span class="star filled">★</span>
                                         {% else %}
                                             <span class="star">☆</span>
                                         {% endif %}
-                                    {% endfor %}
+                                {% endfor %}
                                     <span class="rating-number">{{ rating_value }}/10</span>
-                                </div>
                             </div>
+                        </div>
                             
                             {% if review %}
                             <div class="user-game-review">
@@ -151,11 +151,11 @@
                                         <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path>
                                     </svg>
                                     <p>{{ review }}</p>
-                                </div>
                             </div>
-                            {% endif %}
                         </div>
-                        
+                    {% endif %}
+                        </div>
+                    
                         <!-- Hidden form for editing -->
                         <form id="status-form" action="{{ url_for('games.update_game_status_route', igdb_id=game.igdb_id) }}" method="post" class="status-form" style="display: none;">
                             <div class="form-group">
@@ -174,7 +174,7 @@
                                     <input type="range" id="rating" name="rating" min="0" max="10" step="1" 
                                            value="{{ personal_rating or 0 }}" oninput="updateRatingDisplay(this.value)">
                                     <span id="rating-display" class="user-rating-display">{{ personal_rating or 0 }}/10</span>
-                                </div>
+                                    </div>
                             </div>
                             
                             <div class="form-group">
@@ -202,9 +202,9 @@
                         </button>
                     </form>
                 {% endif %}
+                </div>
             </div>
-        </div>
-    </div>
+                    </div>
     
     <!-- Game Details Tabs -->
     <div class="game-details-tabs">
@@ -212,14 +212,14 @@
             <button class="tab-btn active" data-tab="summary">Summary</button>
             {% if game.screenshots %}
             <button class="tab-btn" data-tab="screenshots">Screenshots</button>
-            {% endif %}
+                        {% endif %}
             {% if game.videos %}
             <button class="tab-btn" data-tab="videos">Videos</button>
-            {% endif %}
+                        {% endif %}
             {% if similar_games %}
             <button class="tab-btn" data-tab="similar">Similar Games</button>
-            {% endif %}
-        </div>
+                {% endif %}
+                        </div>
         
         <div class="tabs-content">
             <div id="summary" class="tab-pane active">
@@ -227,18 +227,18 @@
                 <div class="game-summary">
                     <h2>Summary</h2>
                     <p>{{ game.summary }}</p>
-                </div>
+                        </div>
                 {% else %}
                 <div class="no-content">
                     <p>No summary available for this game.</p>
-                </div>
+                    </div>
                 {% endif %}
                 
                 {% if game.storyline %}
                 <div class="game-storyline">
                     <h2>Storyline</h2>
                     <p>{{ game.storyline }}</p>
-                </div>
+                    </div>
                 {% endif %}
             </div>
             
@@ -250,11 +250,11 @@
                     <div class="screenshot-item">
                         <img src="https:{{ screenshot|replace('/t_thumb/', '/t_screenshot_big/') }}" alt="Screenshot of {{ game.title }}" loading="lazy">
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-            
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
             {% if game.videos %}
             <div id="videos" class="tab-pane">
                 <h2>Videos</h2>
@@ -271,12 +271,12 @@
                             allowfullscreen
                             loading="lazy">
                         </iframe>
+                        </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-            
+                {% endif %}
+                
             {% if similar_games %}
             <div id="similar" class="tab-pane">
                 <h2>Similar Games</h2>
@@ -289,23 +289,23 @@
                             {% else %}
                             <div class="cover-placeholder">
                                 <span>{{ similar_game.name[:2].upper() }}</span>
-                            </div>
-                            {% endif %}
                         </div>
+                            {% endif %}
+                    </div>
                         <div class="similar-game-info">
                             <h3>{{ similar_game.name }}</h3>
                             {% if similar_game.release_dates and similar_game.release_dates[0].y %}
                             <span class="similar-game-year">({{ similar_game.release_dates[0].y }})</span>
-                            {% endif %}
+                {% endif %}
                         </div>
                     </a>
-                    {% endfor %}
-                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
