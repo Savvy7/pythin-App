@@ -227,7 +227,7 @@ def game_details(igdb_id):
     in_library = False
     library_status = 'Planning'
     personal_rating = 0
-    review = ''
+    review = 'None'
     
     # If user data exists, populate the variables
     if user_data:

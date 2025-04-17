@@ -27,3 +27,44 @@ def get_db_connection():
             # This happens when we're outside of a request context
             pass
         return None
+
+def execute_transaction(transaction_function, *args, **kwargs):
+    """
+    Execute a database operation within a transaction.
+    
+    Args:
+        transaction_function: Function that takes a connection and performs database operations
+        args, kwargs: Arguments to pass to the transaction function
+        
+    Returns:
+        The result of the transaction function, or None if an error occurred
+    """
+    conn = get_db_connection()
+    if not conn:
+        return None
+        
+    result = None
+    try:
+        # Start transaction
+        conn.start_transaction()
+        
+        # Execute the transaction function with the connection and any arguments
+        result = transaction_function(conn, *args, **kwargs)
+        
+        # If we get here without errors, commit the transaction
+        conn.commit()
+    except Error as e:
+        # If an error occurs, roll back the transaction
+        conn.rollback()
+        print(f"Transaction error: {e}")
+        try:
+            flash(f"Database operation failed: {e}", "danger")
+        except RuntimeError:
+            # This happens when we're outside of a request context
+            pass
+    finally:
+        # Always close the connection
+        if conn.is_connected():
+            conn.close()
+            
+    return result

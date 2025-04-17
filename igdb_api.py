@@ -20,12 +20,12 @@ def get_igdb_access_token(client_id=IGDB_CLIENT_ID, client_secret=IGDB_CLIENT_SE
     """Get IGDB access token, using cached token if available and not expired"""
     # Get cached token from .env
     cached_token = os.getenv('IGDB_ACCESS_TOKEN')
-    # expires_at = float(os.getenv('IGDB_TOKEN_EXPIRES_AT', '0'))
+    expires_at = float(os.getenv('IGDB_TOKEN_EXPIRES_AT', '0'))
     
     # # Check if we have a valid cached token
-    # current_time = time.time()
-    # if cached_token and current_time < expires_at:
-    return cached_token
+    current_time = time.time()
+    if cached_token and current_time < expires_at:
+        return cached_token
     
     # Get new token if cache is empty or expired
     url = "https://id.twitch.tv/oauth2/token"
