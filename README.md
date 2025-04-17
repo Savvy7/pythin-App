@@ -6,7 +6,6 @@ A personal video game collection and tracking application that helps you manage 
 
 
 ## Features
-// projectpass
 - **Game Search**: Search for games using the IGDB API
 - **Personal Library**: Build and organize your game collection
 - **Game Tracking**: Track your gaming progress with status updates (Playing, Completed, Planning, Abandoned)
